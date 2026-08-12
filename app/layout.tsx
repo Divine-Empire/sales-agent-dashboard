@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Divine Empire — Sales Dashboard",
   description: "AI sales agent leads, conversations and analytics",
+  icons: {
+    icon: [
+      // Two variants so the tab icon stays visible in both browser themes:
+      // white background for a dark tab bar, transparent for a light one.
+      { url: "/favicon-dark-ui.png", media: "(prefers-color-scheme: dark)" },
+      { url: "/favicon-light-ui.png", media: "(prefers-color-scheme: light)" },
+    ],
+  },
 };
 
 const NAV = [
@@ -28,9 +37,14 @@ export default function RootLayout({
           <header className="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-6 py-4">
               <Link href="/" className="flex items-center gap-2.5">
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-600 text-sm font-bold">
-                  DE
-                </span>
+                <Image
+                  src="/logo_DE_light.avif"
+                  alt="Divine Empire"
+                  width={32}
+                  height={25}
+                  className="h-8 w-auto"
+                  priority
+                />
                 <span className="text-sm font-semibold tracking-tight">
                   Divine Empire
                   <span className="ml-2 font-normal text-zinc-500">
