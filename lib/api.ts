@@ -379,3 +379,37 @@ export async function deleteMachine(id: string) {
     { method: "DELETE" },
   );
 }
+
+/** The kanban drag action. Appends a new lead_scores row on the backend
+ * rather than editing one in place — see app/main.py's override_lead_category
+ * for why: scoring stays append-only, so a manual move is a correction, not a
+ * permanent lock, and the next AI re-score still runs normally. */
+export async function overrideLeadCategory(
+  conversationId: string,
+  category: LeadCategory,
+) {
+  return request<{ conversation_id: string; category: string; score: number }>(
+    `/api/leads/${encodeURIComponent(conversationId)}?category=${category}`,
+    { method: "PATCH" },
+  );
+}
+
+export async function updateCustomer(
+  customerId: string,
+  fields: Partial<{
+    name: string;
+    company_name: string;
+    location: string;
+    phone: string;
+    email: string;
+  }>,
+) {
+  return request<{ id: string }>(
+    `/api/customers/${encodeURIComponent(customerId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    },
+  );
+}

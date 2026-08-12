@@ -3,10 +3,11 @@ import type { LeadCategory } from "./api";
 /** Category colours. Hot must read as urgent at a glance — a rep scanning this
  * table is deciding who to call next. */
 export const CATEGORY_STYLES: Record<LeadCategory, string> = {
-  hot: "bg-red-500/15 text-red-400 ring-red-500/30",
-  warm: "bg-amber-500/15 text-amber-400 ring-amber-500/30",
-  cold: "bg-sky-500/15 text-sky-400 ring-sky-500/30",
-  not_interested: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/30",
+  hot: "bg-red-500/15 text-red-700 ring-red-500/30 dark:text-red-400",
+  warm: "bg-amber-500/15 text-amber-700 ring-amber-500/30 dark:text-amber-400",
+  cold: "bg-sky-500/15 text-sky-700 ring-sky-500/30 dark:text-sky-400",
+  not_interested:
+    "bg-zinc-500/15 text-zinc-700 ring-zinc-500/30 dark:text-zinc-400",
 };
 
 export const CATEGORY_LABELS: Record<LeadCategory, string> = {

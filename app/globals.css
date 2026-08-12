@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: the app defaults to light and only switches when
+   `.dark` is present on <html>, set by the theme script below. Tailwind v4
+   defaults dark: to a prefers-color-scheme media query, which would ignore a
+   user's manual choice. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f8fafc;
+  --border: #e2e8f0;
+  --foreground: #0f172a;
+  --muted: #64748b;
+}
+
+.dark {
+  --background: #09090b;
+  --surface: #18181b;
+  --border: #27272a;
+  --foreground: #f4f4f5;
+  --muted: #a1a1aa;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Applied before hydration (see the inline script in layout.tsx) so there is
+   no flash of the wrong theme on load. */

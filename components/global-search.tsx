@@ -1,0 +1,158 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
+interface SearchResult {
+  type: "lead" | "customer";
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+}
+
+/** Debounced client search hitting /api/search — see that route for why it's
+ * a Route Handler rather than calling the backend directly from here (the API
+ * key must never reach browser JavaScript). */
+export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        setOpen(true);
+      }
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (query.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setResults(data.results ?? []);
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  function go(href: string) {
+    setOpen(false);
+    setQuery("");
+    router.push(href);
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-muted transition-colors hover:text-foreground"
+      >
+        <svg
+          className="h-4 w-4 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+        </svg>
+        {!collapsed && (
+          <>
+            <span className="flex-1 truncate text-left">Search…</span>
+            <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted">
+              ⌘K
+            </kbd>
+          </>
+        )}
+      </button>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-[15vh]"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-xl border border-border bg-background shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+              <svg
+                className="h-4 w-4 shrink-0 text-muted"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+              </svg>
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search leads and customers by name, company, or phone…"
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted focus:outline-none"
+              />
+            </div>
+            <div className="max-h-80 overflow-y-auto p-2">
+              {loading && (
+                <p className="px-3 py-6 text-center text-sm text-muted">
+                  Searching…
+                </p>
+              )}
+              {!loading && query.trim().length >= 2 && results.length === 0 && (
+                <p className="px-3 py-6 text-center text-sm text-muted">
+                  No matches for &ldquo;{query}&rdquo;
+                </p>
+              )}
+              {!loading &&
+                results.map((result) => (
+                  <button
+                    key={`${result.type}-${result.id}`}
+                    type="button"
+                    onClick={() => go(result.href)}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface"
+                  >
+                    <span>
+                      <span className="font-medium text-foreground">
+                        {result.title}
+                      </span>
+                      <span className="ml-2 text-muted">
+                        {result.subtitle}
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded bg-surface px-1.5 py-0.5 text-[10px] uppercase text-muted">
+                      {result.type}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

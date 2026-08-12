@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-zinc-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-zinc-200">{value || "—"}</dd>
+      <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
+      <dd className="mt-0.5 text-sm text-foreground">{value || "—"}</dd>
     </div>
   );
 }
@@ -46,14 +46,14 @@ export default async function ConversationPage({
       <div>
         <Link
           href="/leads"
-          className="text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+          className="text-sm text-muted transition-colors hover:text-foreground/80"
         >
           ← Back to leads
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">
           {summary?.customer_name ?? "Unidentified customer"}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           {summary?.company_name ? `${summary.company_name} · ` : ""}
           <span className="capitalize">{channel}</span> · {userId}
         </p>
@@ -80,7 +80,7 @@ export default async function ConversationPage({
                         className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
                           isUser
                             ? "bg-blue-600/90 text-white"
-                            : "bg-zinc-800 text-zinc-100"
+                            : "bg-border text-foreground"
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">
@@ -88,7 +88,7 @@ export default async function ConversationPage({
                         </p>
                         <p
                           className={`mt-1 text-[11px] ${
-                            isUser ? "text-blue-100/70" : "text-zinc-500"
+                            isUser ? "text-blue-100/70" : "text-muted"
                           }`}
                         >
                           {formatDateTime(message.created_at)}
@@ -115,21 +115,21 @@ export default async function ConversationPage({
                   <CategoryBadge category={summary.lead_category} />
                 </div>
                 {summary.summary && (
-                  <p className="text-sm leading-relaxed text-zinc-300">
+                  <p className="text-sm leading-relaxed text-foreground/80">
                     {summary.summary}
                   </p>
                 )}
                 {summary.next_action && (
                   <div className="rounded-lg bg-blue-500/10 px-3 py-2 ring-1 ring-inset ring-blue-500/20">
-                    <p className="text-xs font-medium uppercase tracking-wide text-blue-400">
+                    <p className="text-xs font-medium uppercase tracking-wide text-blue-700 dark:text-blue-400">
                       Recommended next action
                     </p>
-                    <p className="mt-1 text-sm text-zinc-200">
+                    <p className="mt-1 text-sm text-foreground">
                       {summary.next_action}
                     </p>
                   </div>
                 )}
-                <dl className="grid grid-cols-2 gap-3 border-t border-zinc-800 pt-3">
+                <dl className="grid grid-cols-2 gap-3 border-t border-border pt-3">
                   <Field
                     label="Products"
                     value={summary.interested_machines?.join(", ")}
@@ -166,7 +166,7 @@ export default async function ConversationPage({
               <Field label="Avg latency" value={`${avgLatency}ms`} />
             </dl>
             {llmCalls.length > 0 && (
-              <p className="border-t border-zinc-800 px-5 py-2.5 text-xs text-zinc-500">
+              <p className="border-t border-border px-5 py-2.5 text-xs text-muted">
                 Model: {llmCalls[0].model ?? "—"}
               </p>
             )}

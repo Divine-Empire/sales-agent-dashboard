@@ -30,15 +30,15 @@ export default async function OverviewPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-muted">
             Live pipeline from the AI sales agent
           </p>
         </div>
         <span
           className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${
             health.status === "ok"
-              ? "bg-emerald-500/10 text-emerald-400 ring-emerald-500/30"
-              : "bg-red-500/10 text-red-400 ring-red-500/30"
+              ? "bg-emerald-500/10 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400"
+              : "bg-red-500/10 text-red-700 ring-red-500/30 dark:text-red-400"
           }`}
         >
           <span
@@ -79,18 +79,18 @@ export default async function OverviewPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-800 text-left text-xs uppercase tracking-wide text-zinc-500">
+                    <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
                       <th className="px-5 py-2.5 font-medium">Customer</th>
                       <th className="px-5 py-2.5 font-medium">Score</th>
                       <th className="px-5 py-2.5 font-medium">Category</th>
                       <th className="px-5 py-2.5 font-medium">Activity</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/70">
+                  <tbody className="divide-y divide-border/70">
                     {leads.map((lead) => (
                       <tr
                         key={lead.conversation_id}
-                        className="transition-colors hover:bg-zinc-800/30"
+                        className="transition-colors hover:bg-surface"
                       >
                         <td className="px-5 py-3">
                           <ConversationLink
@@ -98,7 +98,7 @@ export default async function OverviewPage() {
                           >
                             {lead.customer_name ?? "Unidentified"}
                           </ConversationLink>
-                          <p className="text-xs text-zinc-500">
+                          <p className="text-xs text-muted">
                             {lead.company_name ?? "—"}
                           </p>
                         </td>
@@ -108,7 +108,7 @@ export default async function OverviewPage() {
                         <td className="px-5 py-3">
                           <CategoryBadge category={lead.category} />
                         </td>
-                        <td className="px-5 py-3 text-zinc-400">
+                        <td className="px-5 py-3 text-muted">
                           {timeAgo(lead.last_message_at ?? lead.scored_at)}
                         </td>
                       </tr>
@@ -168,7 +168,7 @@ export default async function OverviewPage() {
             {handovers.length === 0 ? (
               <EmptyState title="Nothing waiting" />
             ) : (
-              <ul className="divide-y divide-zinc-800/70">
+              <ul className="divide-y divide-border/70">
                 {handovers.slice(0, 4).map((handover) => (
                   <li key={handover.id} className="px-5 py-3">
                     <ConversationLink conversationId={handover.conversation_id}>
@@ -176,7 +176,7 @@ export default async function OverviewPage() {
                         {titleCase(handover.reason)}
                       </span>
                     </ConversationLink>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted">
                       {handover.context ?? "—"}
                     </p>
                   </li>

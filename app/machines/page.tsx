@@ -21,7 +21,7 @@ export default async function MachinesPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Product catalog
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           Upload a brochure and the agent can answer questions about that
           machine immediately — no developer required.
         </p>
@@ -51,7 +51,7 @@ export default async function MachinesPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
                   <th className="px-5 py-2.5 font-medium">Machine</th>
                   <th className="px-5 py-2.5 font-medium">Code</th>
                   <th className="px-5 py-2.5 font-medium">Category</th>
@@ -60,25 +60,25 @@ export default async function MachinesPage() {
                   <th className="px-5 py-2.5" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/70">
+              <tbody className="divide-y divide-border/70">
                 {machines.map((machine) => (
                   <tr
                     key={machine.id}
-                    className="transition-colors hover:bg-zinc-800/30"
+                    className="transition-colors hover:bg-surface"
                   >
-                    <td className="px-5 py-3 text-zinc-200">{machine.name}</td>
+                    <td className="px-5 py-3 text-foreground">{machine.name}</td>
                     <td className="px-5 py-3">
-                      <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-xs text-zinc-300">
+                      <code className="rounded bg-border px-1.5 py-0.5 text-xs text-foreground/80">
                         {machine.machine_code}
                       </code>
                     </td>
-                    <td className="px-5 py-3 text-zinc-400">
+                    <td className="px-5 py-3 text-muted">
                       {machine.category}
                     </td>
-                    <td className="px-5 py-3 text-zinc-400">
+                    <td className="px-5 py-3 text-muted">
                       {machine.price_range ?? "—"}
                     </td>
-                    <td className="px-5 py-3 text-zinc-500">
+                    <td className="px-5 py-3 text-muted">
                       {formatDateTime(machine.created_at)}
                     </td>
                     <td className="px-5 py-3 text-right">
@@ -86,7 +86,7 @@ export default async function MachinesPage() {
                         <input type="hidden" name="id" value={machine.id} />
                         <button
                           type="submit"
-                          className="rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                          className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
                         >
                           Remove
                         </button>
@@ -102,19 +102,19 @@ export default async function MachinesPage() {
 
       {documents.length > 0 && (
         <Card title="Uploaded documents">
-          <ul className="divide-y divide-zinc-800/70">
+          <ul className="divide-y divide-border/70">
             {documents.slice(0, 20).map((doc) => (
               <li
                 key={doc.id}
                 className="flex items-center justify-between px-5 py-2.5 text-sm"
               >
-                <span className="min-w-0 truncate text-zinc-300">
+                <span className="min-w-0 truncate text-foreground/80">
                   {doc.title ?? "Untitled"}
-                  <span className="ml-2 text-xs text-zinc-600">
+                  <span className="ml-2 text-xs text-muted/70">
                     {titleCase(doc.doc_type)}
                   </span>
                 </span>
-                <span className="shrink-0 text-xs text-zinc-500">
+                <span className="shrink-0 text-xs text-muted">
                   {doc.indexed_at ? "Indexed" : "Pending"} ·{" "}
                   {formatDateTime(doc.created_at)}
                 </span>

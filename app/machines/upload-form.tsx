@@ -18,8 +18,8 @@ const CATEGORIES = [
 ];
 
 const field =
-  "w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none";
-const label = "block text-xs font-medium uppercase tracking-wide text-zinc-500";
+  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted/70 focus:border-blue-500 focus:outline-none";
+const label = "block text-xs font-medium uppercase tracking-wide text-muted";
 
 function Result({ state }: { state: UploadState | null }) {
   if (!state) return null;
@@ -57,7 +57,7 @@ export function AddMachineForm() {
             className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
               mode === option
                 ? "bg-blue-600 text-white"
-                : "bg-zinc-800 text-zinc-400 hover:text-zinc-100"
+                : "bg-border text-muted hover:text-foreground"
             }`}
           >
             {option === "file" ? "Upload document" : "Paste specifications"}
@@ -134,9 +134,9 @@ export function AddMachineForm() {
               type="file"
               required
               accept=".pdf,.docx,.txt,.md"
-              className="mt-1 w-full cursor-pointer rounded-lg border border-dashed border-zinc-700 bg-zinc-900 px-3 py-3 text-sm text-zinc-400 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-sm file:text-zinc-200"
+              className="mt-1 w-full cursor-pointer rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm text-muted file:mr-3 file:rounded-md file:border-0 file:bg-border file:px-3 file:py-1.5 file:text-sm file:text-foreground"
             />
-            <p className="mt-1.5 text-xs text-zinc-600">
+            <p className="mt-1.5 text-xs text-muted/70">
               PDF, Word or text, up to 10MB. Scanned PDFs contain images rather
               than text — use &ldquo;Paste specifications&rdquo; for those.
             </p>

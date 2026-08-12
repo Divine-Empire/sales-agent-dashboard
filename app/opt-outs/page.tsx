@@ -13,7 +13,7 @@ export default async function OptOutsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           Opt-out register
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           Customers who asked not to be contacted. The agent stops replying to
           these numbers immediately and permanently.
         </p>
@@ -37,28 +37,28 @@ export default async function OptOutsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
                   <th className="px-5 py-2.5 font-medium">Channel</th>
                   <th className="px-5 py-2.5 font-medium">User</th>
                   <th className="px-5 py-2.5 font-medium">Their words</th>
                   <th className="px-5 py-2.5 font-medium">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/70">
+              <tbody className="divide-y divide-border/70">
                 {opt_outs.map((entry) => (
                   <tr key={entry.id}>
-                    <td className="px-5 py-3 capitalize text-zinc-400">
+                    <td className="px-5 py-3 capitalize text-muted">
                       {entry.channel}
                     </td>
                     <td className="px-5 py-3">
-                      <code className="text-xs text-zinc-300">
+                      <code className="text-xs text-foreground/80">
                         {entry.channel_user_id}
                       </code>
                     </td>
-                    <td className="px-5 py-3 italic text-zinc-400">
+                    <td className="px-5 py-3 italic text-muted">
                       {entry.reason ? `“${entry.reason}”` : "—"}
                     </td>
-                    <td className="px-5 py-3 text-zinc-500">
+                    <td className="px-5 py-3 text-muted">
                       {formatDateTime(entry.opted_out_at)}
                     </td>
                   </tr>

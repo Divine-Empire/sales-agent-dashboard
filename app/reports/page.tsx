@@ -28,7 +28,7 @@ export default async function ReportsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           {report.period_start && report.period_end
             ? `${report.period_start} to ${report.period_end}`
             : "Aggregated activity"}
@@ -43,7 +43,7 @@ export default async function ReportsPage({
             className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
               active === option.value
                 ? "bg-blue-600 text-white"
-                : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-100"
+                : "bg-surface text-muted ring-1 ring-border hover:text-foreground"
             }`}
           >
             {option.label}

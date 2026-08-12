@@ -13,12 +13,12 @@ const TABS = [
 ];
 
 const REASON_TONES: Record<string, string> = {
-  formal_quote: "bg-blue-500/15 text-blue-400 ring-blue-500/30",
-  price_negotiation: "bg-amber-500/15 text-amber-400 ring-amber-500/30",
-  bulk_order: "bg-purple-500/15 text-purple-400 ring-purple-500/30",
-  customer_request: "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30",
-  low_confidence: "bg-red-500/15 text-red-400 ring-red-500/30",
-  other: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/30",
+  formal_quote: "bg-blue-500/15 text-blue-700 ring-blue-500/30 dark:text-blue-400",
+  price_negotiation: "bg-amber-500/15 text-amber-700 ring-amber-500/30 dark:text-amber-400",
+  bulk_order: "bg-purple-500/15 text-purple-700 ring-purple-500/30 dark:text-purple-400",
+  customer_request: "bg-emerald-500/15 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400",
+  low_confidence: "bg-red-500/15 text-red-700 ring-red-500/30 dark:text-red-400",
+  other: "bg-zinc-500/15 text-zinc-700 ring-zinc-500/30 dark:text-zinc-400",
 };
 
 function StatusButton({
@@ -36,7 +36,7 @@ function StatusButton({
       <input type="hidden" name="status" value={status} />
       <button
         type="submit"
-        className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+        className="rounded-md bg-border px-2.5 py-1 text-xs text-foreground/80 transition-colors hover:bg-border hover:text-foreground"
       >
         {label}
       </button>
@@ -59,7 +59,7 @@ export default async function HandoversPage({
         <h1 className="text-2xl font-semibold tracking-tight">
           Handover queue
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           Conversations the agent escalated to a human — quotes, negotiations
           and bulk orders.
         </p>
@@ -73,7 +73,7 @@ export default async function HandoversPage({
             className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
               active === tab.value
                 ? "bg-blue-600 text-white"
-                : "bg-zinc-900 text-zinc-400 ring-1 ring-zinc-800 hover:text-zinc-100"
+                : "bg-surface text-muted ring-1 ring-border hover:text-foreground"
             }`}
           >
             {tab.label}
@@ -88,7 +88,7 @@ export default async function HandoversPage({
             hint="The agent escalates automatically for formal quotes, negotiations and bulk orders."
           />
         ) : (
-          <ul className="divide-y divide-zinc-800/70">
+          <ul className="divide-y divide-border/70">
             {handovers.map((handover) => (
               <li key={handover.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -106,16 +106,16 @@ export default async function HandoversPage({
                       >
                         <span className="text-sm">View conversation</span>
                       </ConversationLink>
-                      <span className="text-xs text-zinc-600">
+                      <span className="text-xs text-muted/70">
                         {timeAgo(handover.notified_at)}
                       </span>
                     </div>
                     {/* The context is the point of the queue: a rep must be
                         able to pick this up without reading the transcript. */}
-                    <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+                    <p className="mt-2 text-sm leading-relaxed text-foreground/80">
                       {handover.context ?? "No context recorded."}
                     </p>
-                    <p className="mt-1.5 text-xs text-zinc-600">
+                    <p className="mt-1.5 text-xs text-muted/70">
                       Raised {formatDateTime(handover.notified_at)}
                       {handover.resolved_at &&
                         ` · resolved ${formatDateTime(handover.resolved_at)}`}

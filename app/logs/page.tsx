@@ -5,11 +5,11 @@ import { Card, ConversationLink, EmptyState, Stat } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 const EVENT_TONES: Record<string, string> = {
-  llm_call: "bg-blue-500/15 text-blue-400",
-  rag_search: "bg-purple-500/15 text-purple-400",
-  tool_call: "bg-emerald-500/15 text-emerald-400",
-  fallback: "bg-amber-500/15 text-amber-400",
-  error: "bg-red-500/15 text-red-400",
+  llm_call: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  rag_search: "bg-purple-500/15 text-purple-700 dark:text-purple-400",
+  tool_call: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+  fallback: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  error: "bg-red-500/15 text-red-700 dark:text-red-400",
 };
 
 export default async function LogsPage() {
@@ -38,7 +38,7 @@ export default async function LogsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">
           AI conversation logs
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted">
           Per-turn telemetry: which model served each call, tokens spent, and
           latency.
         </p>
@@ -62,7 +62,7 @@ export default async function LogsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px] text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-left text-xs uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
                   <th className="px-5 py-2.5 font-medium">Event</th>
                   <th className="px-5 py-2.5 font-medium">Conversation</th>
                   <th className="px-5 py-2.5 font-medium">Model</th>
@@ -71,17 +71,17 @@ export default async function LogsPage() {
                   <th className="px-5 py-2.5 font-medium">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/70">
+              <tbody className="divide-y divide-border/70">
                 {logs.map((log) => (
                   <tr
                     key={log.id}
-                    className="transition-colors hover:bg-zinc-800/30"
+                    className="transition-colors hover:bg-surface"
                   >
                     <td className="px-5 py-2.5">
                       <span
                         className={`rounded px-1.5 py-0.5 text-xs ${
                           EVENT_TONES[log.event_type] ??
-                          "bg-zinc-800 text-zinc-400"
+                          "bg-border text-muted"
                         }`}
                       >
                         {titleCase(log.event_type)}
@@ -92,18 +92,18 @@ export default async function LogsPage() {
                         <code className="text-xs">{log.conversation_id}</code>
                       </ConversationLink>
                     </td>
-                    <td className="px-5 py-2.5 text-zinc-400">
+                    <td className="px-5 py-2.5 text-muted">
                       {log.model ?? "—"}
                     </td>
-                    <td className="px-5 py-2.5 tabular-nums text-zinc-400">
+                    <td className="px-5 py-2.5 tabular-nums text-muted">
                       {log.prompt_tokens !== null
                         ? `${(log.prompt_tokens ?? 0) + (log.completion_tokens ?? 0)}`
                         : "—"}
                     </td>
-                    <td className="px-5 py-2.5 tabular-nums text-zinc-400">
+                    <td className="px-5 py-2.5 tabular-nums text-muted">
                       {log.latency_ms !== null ? `${log.latency_ms}ms` : "—"}
                     </td>
-                    <td className="px-5 py-2.5 text-zinc-500">
+                    <td className="px-5 py-2.5 text-muted">
                       {formatDateTime(log.created_at)}
                     </td>
                   </tr>
