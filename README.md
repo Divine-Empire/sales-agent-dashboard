@@ -12,6 +12,11 @@ than a silent leak.
 
 Never rename these variables to `NEXT_PUBLIC_*`.
 
+The rendered CRM is protected by a signed, HTTP-only session cookie. Configure
+`CRM_AUTH_PASSWORD` and a high-entropy `CRM_SESSION_SECRET` of at least 32
+characters. Server Actions and the search Route Handler verify the session in
+addition to the route-level proxy check.
+
 ## Setup
 
 ```bash
@@ -24,6 +29,8 @@ bun dev
 |---|---|
 | `SALES_AGENT_API_URL` | `https://sales-agent-956w.onrender.com` |
 | `SALES_AGENT_API_KEY` | Must match `DASHBOARD_API_KEY` on the Render service |
+| `CRM_AUTH_PASSWORD` | Password used by authorised dashboard operators |
+| `CRM_SESSION_SECRET` | Random 32+ character secret used to sign 8-hour sessions |
 
 ## Deploying to Vercel
 

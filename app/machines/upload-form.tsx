@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { SURFACE_FIELD_CLASS } from "@/components/form-styles";
 import { addFromText, uploadDocument, type UploadState } from "./actions";
 
 const CATEGORIES = [
@@ -17,8 +18,7 @@ const CATEGORIES = [
   "Other Equipment",
 ];
 
-const field =
-  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted/70 focus:border-blue-500 focus:outline-none";
+const field = SURFACE_FIELD_CLASS;
 const label = "block text-xs font-medium uppercase tracking-wide text-muted";
 
 function Result({ state }: { state: UploadState | null }) {

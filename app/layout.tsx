@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Sidebar } from "@/components/sidebar";
+import { AppShell } from "@/components/app-shell";
 import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
 
@@ -25,12 +25,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="bg-background text-foreground antialiased">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="min-w-0 flex-1 overflow-x-hidden px-6 py-8 lg:px-10">
-            {children}
-          </main>
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

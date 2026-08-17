@@ -15,6 +15,66 @@ an accidental client import is a build error, not a silent leak).
 Vercel project: `sales-agent-dashboard` (team `mis-thedivineemps-projects`).
 Repo: `Divine-Empire/sales-agent-dashboard`.
 
+## Current CRM implementation
+
+The improvement plan in `.agents/improvement.md` is authoritative. As of
+2026-08-17, Phases 0–6 are complete:
+
+- Phase 0: signed dashboard sessions protect every CRM route, Server Action,
+  and Route Handler. `CRM_AUTH_PASSWORD` validates login and
+  `CRM_SESSION_SECRET` signs the HTTP-only session cookie. Live-data failures
+  are visibly different from valid empty results, and route loading/error
+  boundaries preserve the shell.
+- Phase 1: `AppShell` provides the persistent responsive frame, desktop
+  sidebar, mobile drawer, top bar, global search, theme-correct Divine Empire
+  logos, and shared workspace/filter/status primitives.
+- Phase 2: `/conversations/telegram/[[...id]]` is the canonical read-only
+  Telegram CRM inbox. It uses `GET /api/conversations?channel=telegram` for
+  the list and the existing detail/log endpoints for the active thread. The
+  UI has independent list/timeline/inspector panes, local search, honest
+  missing-summary handling, and mobile list-to-chat navigation. Legacy
+  `/conversations/[id]` URLs redirect to the canonical Telegram route.
+- Phase 3: `/conversations/whatsapp/[[...id]]` is a deterministic, fictional
+  CRM preview. `lib/whatsapp-fixtures.ts` is the only data source and
+  `lib/whatsapp-adapter.ts` maps it into the UI-only channel contract. The
+  workspace demonstrates templates, replies, interactive choices, media,
+  delivery/read/failure states, classification, and customer context. It has
+  no WhatsApp-related fetch, environment access, embedded portal, or enabled
+  mutation control. The preview banner and disabled composer are mandatory.
+- Phase 4: Telegram and WhatsApp share the channel contract, conversation
+  list shell/rows, contact header, timeline viewport, and date separators in
+  `components/conversations/`. Channel-specific message bodies and CRM
+  inspectors remain separate where their semantics differ. The former
+  Pipeline temperature board is now the Board view at `/leads?view=board`;
+  `/pipeline` redirects there for compatibility. Do not restore Pipeline as a
+  separate primary-navigation concept until durable opportunity stages exist.
+  Shared data-table and form-control styles replace the first repeated
+  implementations; extend those primitives rather than adding new variants.
+- Phase 5: `/customers/[id]` is the account workspace with complete contact
+  identifiers, transcript, qualification facts, and next action. `/customers`
+  has URL-persisted search, status, sort, and pagination; because the current
+  backend customer endpoint supports only `limit`, these controls operate
+  server-side over a bounded 500-record fetch until native query parameters
+  are added. Overview is organized around hot leads, pending handovers, and
+  recent conversations. `/operations/health` and the Operations navigation
+  group separate service/AI telemetry from sales reporting. The former flat
+  token-cost estimate was removed because it did not apply model-specific
+  input and output rates.
+- Phase 6: the quality pass adds keyboard skip navigation, reduced-motion
+  handling, and modal focus management for the mobile drawer. Lint, typecheck,
+  production build, and the disconnected-WhatsApp scan pass. A preview was
+  deployed only to the linked `sales-agent-dashboard` Vercel project; no
+  production promotion or `whatsapp-portal` change was made.
+
+The first Telegram version is intentionally read-only. Do not make its
+disabled composer operational until operator permissions, auditing, and a
+backend send API have been explicitly designed.
+
+Authenticated CRM operators need complete customer phone numbers and channel
+identifiers. Do not visually mask these values in customer or conversation
+workspaces. WhatsApp preview fixtures must likewise use complete but obviously
+fictional, invalid numbers rather than masked placeholders.
+
 ## The backend you're calling
 
 Repo `Divine-Empire/sales-agent` (sibling directory `../sales-agent`),
@@ -29,11 +89,11 @@ session is actively working on it in parallel** — see that repo's
   PATCH category-override), `conversations/{id}`, `overview`,
   `reports/{type}`, `customers` (GET + PATCH), `opt-outs`, `summaries`,
   `logs`, `machines` (+ upload/text-add/delete). All require `X-API-Key`.
-- **No dedicated conversation-list/inbox endpoint exists.** If a Telegram
-  inbox view needs one (last-message preview, per-conversation attention
-  state), that's new backend work — ask the other session for it rather
-  than assembling it from several client-side round trips against
-  `leads`/`summaries`/`customers`.
+- `GET /api/conversations?limit=50&channel=telegram` is the dedicated inbox
+  endpoint. It includes every conversation, customer/company identity, last
+  message preview and role, latest lead score/category, handover status, and
+  customer intent when available. Use it for the Telegram inbox rather than
+  assembling several client-side requests.
 - **No unread/read-tracking concept exists anywhere in the schema.** Treat
   any "unread count" UI as backend-capability-gated (optional field, shown
   only when present), not something to fake client-side.
@@ -81,7 +141,8 @@ and its assumptions about `conversation_id` stability, missing-summary
 handling, and the missing inbox-list/unread-tracking endpoints all check out
 against the real API. Follow its phase order; Phase 0 (auth + honest data
 states) is explicitly release-blocking and should land before the visual
-restructure.
+restructure. Phases 0–6 are complete; keep the phase table and implementation
+notes current if new work is added.
 
 ## Conventions
 

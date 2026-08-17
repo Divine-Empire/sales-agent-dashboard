@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /** Light is the default theme; dark is an explicit, persisted opt-in — see
  * theme-script.tsx for the pre-hydration logic that keeps this in sync. */
 export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  const isDark = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener("theme-preference", onStoreChange);
+      window.addEventListener("storage", onStoreChange);
+      return () => {
+        window.removeEventListener("theme-preference", onStoreChange);
+        window.removeEventListener("storage", onStoreChange);
+      };
+    },
+    () => document.documentElement.classList.contains("dark"),
+    () => false,
+  );
 
   function toggle() {
     const next = !isDark;
-    setIsDark(next);
     document.documentElement.classList.toggle("dark", next);
     try {
       localStorage.setItem("theme", next ? "dark" : "light");
@@ -21,6 +27,7 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
       // Storage can be unavailable (private mode, quota) — the toggle still
       // works for the session, it just will not persist across reloads.
     }
+    window.dispatchEvent(new Event("theme-preference"));
   }
 
   return (
@@ -59,7 +66,9 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
           />
         </svg>
       )}
-      {!collapsed && <span>{isDark ? "Dark mode" : "Light mode"}</span>}
+      <span className={collapsed ? "lg:hidden" : ""}>
+        {isDark ? "Dark mode" : "Light mode"}
+      </span>
     </button>
   );
 }

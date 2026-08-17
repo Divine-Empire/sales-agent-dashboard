@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { patchHandover } from "@/lib/api";
+import { requireDashboardSession } from "@/lib/auth";
 
 /**
  * Update a handover's status.
@@ -10,16 +11,11 @@ import { patchHandover } from "@/lib/api";
  * Next.js, which calls Render. The key never appears in client JavaScript.
  */
 export async function updateHandoverStatus(formData: FormData) {
+  await requireDashboardSession();
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "");
   if (!id || !status) return;
-  try {
-    await patchHandover(id, status);
-  } catch (error) {
-    // The queue is still readable if this fails; surfacing a broken page would
-    // be worse than a stale status.
-    console.error("[handover] update failed", error);
-  }
+  await patchHandover(id, status);
   revalidatePath("/handovers");
   revalidatePath("/");
 }

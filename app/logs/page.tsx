@@ -1,6 +1,8 @@
 import { getAiLogs } from "@/lib/api";
 import { formatDateTime, titleCase } from "@/lib/format";
 import { Card, ConversationLink, EmptyState, Stat } from "@/components/ui";
+import { DataStateNotice } from "@/components/data-state-notice";
+import { WorkspaceHeader } from "@/components/workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +15,8 @@ const EVENT_TONES: Record<string, string> = {
 };
 
 export default async function LogsPage() {
-  const { logs } = await getAiLogs({ limit: 200 });
+  const logsResult = await getAiLogs({ limit: 200 });
+  const { logs } = logsResult;
 
   const llmCalls = logs.filter((log) => log.event_type === "llm_call");
   const tokens = llmCalls.reduce(
@@ -28,30 +31,22 @@ export default async function LogsPage() {
     : 0;
   const fallbacks = logs.filter((log) => log.event_type === "fallback").length;
 
-  // Rough GPT-4o pricing, stated as approximate because it is: $2.50/1M input,
-  // $10/1M output. Useful for "what will this cost at scale?"
-  const estimatedCost = (tokens / 1_000_000) * 5;
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          AI conversation logs
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Per-turn telemetry: which model served each call, tokens spent, and
-          latency.
-        </p>
-      </div>
+      <DataStateNotice states={[logsResult._dataState]} />
+      <WorkspaceHeader
+        title="AI performance"
+        description="Model activity, token usage, latency, fallbacks, and technical events."
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="LLM calls" value={llmCalls.length} />
         <Stat label="Tokens" value={tokens.toLocaleString()} />
         <Stat label="Avg latency" value={`${avgLatency}ms`} />
         <Stat
-          label="Est. cost"
-          value={`$${estimatedCost.toFixed(3)}`}
-          hint={fallbacks > 0 ? `${fallbacks} fallback events` : "no fallbacks"}
+          label="Fallbacks"
+          value={fallbacks}
+          hint={fallbacks > 0 ? "review required" : "none recorded"}
         />
       </div>
 

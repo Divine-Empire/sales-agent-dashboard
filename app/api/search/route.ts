@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCustomers, getLeads } from "@/lib/api";
+import { hasDashboardSession } from "@/lib/auth";
 
 /**
  * Route Handler, not a Server Action — the sidebar search needs a fetchable
@@ -8,6 +9,9 @@ import { getCustomers, getLeads } from "@/lib/api";
  * key stays put.
  */
 export async function GET(request: Request) {
+  if (!(await hasDashboardSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const query = new URL(request.url).searchParams.get("q")?.trim().toLowerCase();
   if (!query || query.length < 2) {
     return NextResponse.json({ results: [] });

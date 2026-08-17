@@ -1,6 +1,11 @@
-import Link from "next/link";
 import { getReport } from "@/lib/api";
 import { BarRow, Card, EmptyState, Stat } from "@/components/ui";
+import { DataStateNotice } from "@/components/data-state-notice";
+import {
+  PageToolbar,
+  SegmentedControl,
+  WorkspaceHeader,
+} from "@/components/workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -26,30 +31,26 @@ export default async function ReportsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
-        <p className="mt-1 text-sm text-muted">
-          {report.period_start && report.period_end
+      <DataStateNotice states={[report._dataState]} />
+      <WorkspaceHeader
+        title="Reports"
+        description={
+          report.period_start && report.period_end
             ? `${report.period_start} to ${report.period_end}`
-            : "Aggregated activity"}
-        </p>
-      </div>
+            : "Aggregated activity"
+        }
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {PERIODS.map((option) => (
-          <Link
-            key={option.value}
-            href={`/reports?period=${option.value}`}
-            className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-              active === option.value
-                ? "bg-blue-600 text-white"
-                : "bg-surface text-muted ring-1 ring-border hover:text-foreground"
-            }`}
-          >
-            {option.label}
-          </Link>
-        ))}
-      </div>
+      <PageToolbar>
+        <SegmentedControl
+          ariaLabel="Select reporting period"
+          activeValue={active}
+          items={PERIODS.map((option) => ({
+            ...option,
+            href: `/reports?period=${option.value}`,
+          }))}
+        />
+      </PageToolbar>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Leads" value={metrics.leads} />

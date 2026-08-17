@@ -1,13 +1,25 @@
-import Link from "next/link";
 import { getLeads, type LeadCategory } from "@/lib/api";
 import { CATEGORY_LABELS, timeAgo, titleCase } from "@/lib/format";
 import {
-  Card,
   CategoryBadge,
   ConversationLink,
   EmptyState,
   ScoreBar,
 } from "@/components/ui";
+import { LeadBoard } from "@/components/leads/lead-board";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableHeader,
+  DataTableRow,
+} from "@/components/data-table";
+import { DataStateNotice } from "@/components/data-state-notice";
+import {
+  PageToolbar,
+  DataSurface,
+  SegmentedControl,
+  WorkspaceHeader,
+} from "@/components/workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -44,43 +56,57 @@ function TopFactors({ factors }: { factors: Record<string, number> }) {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; view?: string }>;
 }) {
-  const { category } = await searchParams;
-  const { leads } = await getLeads({
-    limit: 200,
-    category: category || undefined,
+  const { category, view } = await searchParams;
+  const activeView = view === "board" ? "board" : "table";
+  const leadsResult = await getLeads({
+    limit: activeView === "board" ? 300 : 200,
+    category: activeView === "table" ? category || undefined : undefined,
   });
+  const { leads } = leadsResult;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
-        <p className="mt-1 text-sm text-muted">
-          Ranked by score. Highest-potential customers first.
-        </p>
-      </div>
+      <DataStateNotice states={[leadsResult._dataState]} />
+      <WorkspaceHeader
+        title="Leads"
+        description="Ranked by AI qualification score. Table and board are two views of the same lead records."
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {FILTERS.map((filter) => {
-          const active = (category ?? "") === filter.value;
-          return (
-            <Link
-              key={filter.value || "all"}
-              href={filter.value ? `/leads?category=${filter.value}` : "/leads"}
-              className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                active
-                  ? "bg-blue-600 text-white"
-                  : "bg-surface text-muted ring-1 ring-border hover:text-foreground"
-              }`}
-            >
-              {filter.label}
-            </Link>
-          );
-        })}
-      </div>
+      <PageToolbar>
+        {activeView === "table" ? (
+          <SegmentedControl
+            ariaLabel="Filter leads by category"
+            activeValue={category ?? ""}
+            items={FILTERS.map((filter) => ({
+              ...filter,
+              href: filter.value ? `/leads?category=${filter.value}` : "/leads",
+            }))}
+          />
+        ) : (
+          <p className="text-xs text-muted">
+            Drag cards or use “Move to” to correct an AI category. It is not a permanent lock.
+          </p>
+        )}
+        <SegmentedControl
+          ariaLabel="Choose leads view"
+          activeValue={activeView}
+          items={[
+            {
+              value: "table",
+              label: "Table",
+              href: category ? `/leads?category=${category}` : "/leads",
+            },
+            { value: "board", label: "Board", href: "/leads?view=board" },
+          ]}
+        />
+      </PageToolbar>
 
-      <Card title={`${leads.length} lead${leads.length === 1 ? "" : "s"}`}>
+      {activeView === "board" && leads.length > 0 ? (
+        <LeadBoard leads={leads} />
+      ) : (
+      <DataSurface title={`${leads.length} lead${leads.length === 1 ? "" : "s"}`}>
         {leads.length === 0 ? (
           <EmptyState
             title="No leads in this view"
@@ -91,10 +117,8 @@ export default async function LeadsPage({
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
+          <DataTable minWidth="min-w-[860px]">
+              <DataTableHeader>
                   <th className="px-5 py-2.5 font-medium">#</th>
                   <th className="px-5 py-2.5 font-medium">Customer</th>
                   <th className="px-5 py-2.5 font-medium">Score</th>
@@ -103,14 +127,10 @@ export default async function LeadsPage({
                   <th className="px-5 py-2.5 font-medium">Why</th>
                   <th className="px-5 py-2.5 font-medium">Location</th>
                   <th className="px-5 py-2.5 font-medium">Activity</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/70">
+              </DataTableHeader>
+              <DataTableBody>
                 {leads.map((lead, index) => (
-                  <tr
-                    key={lead.conversation_id}
-                    className="transition-colors hover:bg-surface"
-                  >
+                  <DataTableRow key={lead.conversation_id}>
                     <td className="px-5 py-3 tabular-nums text-muted/70">
                       {index + 1}
                     </td>
@@ -140,13 +160,13 @@ export default async function LeadsPage({
                     <td className="px-5 py-3 text-muted">
                       {timeAgo(lead.last_message_at ?? lead.scored_at)}
                     </td>
-                  </tr>
+                  </DataTableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </DataTableBody>
+          </DataTable>
         )}
-      </Card>
+      </DataSurface>
+      )}
     </div>
   );
 }

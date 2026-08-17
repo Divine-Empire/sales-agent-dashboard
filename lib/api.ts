@@ -25,6 +25,14 @@ export class ApiError extends Error {
   }
 }
 
+export interface DataState {
+  status: "ready" | "unavailable";
+  fetchedAt: string;
+  message?: string;
+}
+
+export type ApiData<T extends object> = T & { _dataState: DataState };
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_BASE) {
     throw new ApiError("SALES_AGENT_API_URL is not configured", 500);
@@ -53,12 +61,29 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 /** Read paths return an empty shape on failure so one dead endpoint does not
  * blank the whole dashboard. Errors are logged server-side. */
-async function safe<T>(path: string, fallback: T): Promise<T> {
+async function safe<T extends object>(
+  path: string,
+  fallback: T,
+): Promise<ApiData<T>> {
   try {
-    return await request<T>(path);
+    const data = await request<T>(path);
+    return {
+      ...data,
+      _dataState: { status: "ready", fetchedAt: new Date().toISOString() },
+    };
   } catch (error) {
     console.error(`[api] ${path}`, error);
-    return fallback;
+    return {
+      ...fallback,
+      _dataState: {
+        status: "unavailable",
+        fetchedAt: new Date().toISOString(),
+        message:
+          error instanceof ApiError && error.status === 500
+            ? "The sales-agent connection is not configured."
+            : "Live data could not be loaded from the sales agent.",
+      },
+    };
   }
 }
 
@@ -128,6 +153,24 @@ export interface ConversationDetail {
   messages: Message[];
 }
 
+export interface ConversationListItem {
+  conversation_id: string;
+  channel: string;
+  status: string;
+  started_at: string | null;
+  last_message_at: string | null;
+  customer_name: string | null;
+  company_name: string | null;
+  channel_user_id: string | null;
+  phone: string | null;
+  last_message: string | null;
+  last_message_role: Message["role"] | null;
+  lead_score: number | null;
+  lead_category: LeadCategory | null;
+  handover_status: string;
+  customer_intent: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Endpoints
 // ---------------------------------------------------------------------------
@@ -154,6 +197,19 @@ export function getConversation(conversationId: string) {
   return safe<ConversationDetail>(
     `/api/conversations/${encodeURIComponent(conversationId)}`,
     { conversation_id: conversationId, summary: null, messages: [] },
+  );
+}
+
+export function getConversations(params?: {
+  limit?: number;
+  channel?: string;
+}) {
+  const query = new URLSearchParams();
+  query.set("limit", String(params?.limit ?? 50));
+  if (params?.channel) query.set("channel", params.channel);
+  return safe<{ count: number; conversations: ConversationListItem[] }>(
+    `/api/conversations?${query}`,
+    { count: 0, conversations: [] },
   );
 }
 

@@ -1,8 +1,14 @@
-import Link from "next/link";
 import { getHandovers } from "@/lib/api";
 import { formatDateTime, timeAgo, titleCase } from "@/lib/format";
 import { Card, ConversationLink, EmptyState } from "@/components/ui";
 import { updateHandoverStatus } from "./actions";
+import { DataStateNotice } from "@/components/data-state-notice";
+import {
+  PageToolbar,
+  SegmentedControl,
+  StatusBadge,
+  WorkspaceHeader,
+} from "@/components/workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -12,14 +18,14 @@ const TABS = [
   { value: "resolved", label: "Resolved" },
 ];
 
-const REASON_TONES: Record<string, string> = {
-  formal_quote: "bg-blue-500/15 text-blue-700 ring-blue-500/30 dark:text-blue-400",
-  price_negotiation: "bg-amber-500/15 text-amber-700 ring-amber-500/30 dark:text-amber-400",
-  bulk_order: "bg-purple-500/15 text-purple-700 ring-purple-500/30 dark:text-purple-400",
-  customer_request: "bg-emerald-500/15 text-emerald-700 ring-emerald-500/30 dark:text-emerald-400",
-  low_confidence: "bg-red-500/15 text-red-700 ring-red-500/30 dark:text-red-400",
-  other: "bg-zinc-500/15 text-zinc-700 ring-zinc-500/30 dark:text-zinc-400",
-};
+const REASON_TONES = {
+  formal_quote: "info",
+  price_negotiation: "warning",
+  bulk_order: "accent",
+  customer_request: "success",
+  low_confidence: "danger",
+  other: "neutral",
+} as const;
 
 function StatusButton({
   id,
@@ -51,35 +57,27 @@ export default async function HandoversPage({
 }) {
   const { status } = await searchParams;
   const active = status ?? "pending";
-  const { handovers } = await getHandovers(active);
+  const handoversResult = await getHandovers(active);
+  const { handovers } = handoversResult;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Handover queue
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Conversations the agent escalated to a human — quotes, negotiations
-          and bulk orders.
-        </p>
-      </div>
+      <DataStateNotice states={[handoversResult._dataState]} />
+      <WorkspaceHeader
+        title="Handover queue"
+        description="Conversations the agent escalated to a human — quotes, negotiations and bulk orders."
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.value}
-            href={`/handovers?status=${tab.value}`}
-            className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-              active === tab.value
-                ? "bg-blue-600 text-white"
-                : "bg-surface text-muted ring-1 ring-border hover:text-foreground"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </div>
+      <PageToolbar>
+        <SegmentedControl
+          ariaLabel="Filter handovers by status"
+          activeValue={active}
+          items={TABS.map((tab) => ({
+            ...tab,
+            href: `/handovers?status=${tab.value}`,
+          }))}
+        />
+      </PageToolbar>
 
       <Card title={`${handovers.length} in queue`}>
         {handovers.length === 0 ? (
@@ -94,13 +92,15 @@ export default async function HandoversPage({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                          REASON_TONES[handover.reason] ?? REASON_TONES.other
-                        }`}
+                      <StatusBadge
+                        tone={
+                          REASON_TONES[
+                            handover.reason as keyof typeof REASON_TONES
+                          ] ?? REASON_TONES.other
+                        }
                       >
                         {titleCase(handover.reason)}
-                      </span>
+                      </StatusBadge>
                       <ConversationLink
                         conversationId={handover.conversation_id}
                       >

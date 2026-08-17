@@ -14,7 +14,7 @@ interface SearchResult {
 /** Debounced client search hitting /api/search — see that route for why it's
  * a Route Handler rather than calling the backend directly from here (the API
  * key must never reach browser JavaScript). */
-export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
+export function GlobalSearch({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -40,10 +40,8 @@ export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
 
   useEffect(() => {
     if (query.trim().length < 2) {
-      setResults([]);
       return;
     }
-    setLoading(true);
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
@@ -67,7 +65,10 @@ export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-muted transition-colors hover:text-foreground"
+        aria-label={compact ? "Search leads and customers" : undefined}
+        className={`flex items-center gap-3 rounded-lg border border-border bg-surface text-sm text-muted transition-colors hover:border-muted/40 hover:text-foreground ${
+          compact ? "h-10 w-10 justify-center" : "w-full px-3 py-2"
+        }`}
       >
         <svg
           className="h-4 w-4 shrink-0"
@@ -79,7 +80,7 @@ export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
           <circle cx="11" cy="11" r="7" />
           <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
         </svg>
-        {!collapsed && (
+        {!compact && (
           <>
             <span className="flex-1 truncate text-left">Search…</span>
             <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted">
@@ -91,14 +92,20 @@ export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-[15vh]"
+          className="fixed inset-0 z-[70] flex items-start justify-center bg-slate-950/50 px-4 pt-[12vh] backdrop-blur-[2px]"
           onClick={() => setOpen(false)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="global-search-title"
             className="w-full max-w-lg rounded-xl border border-border bg-background shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+              <h2 id="global-search-title" className="sr-only">
+                Search leads and customers
+              </h2>
               <svg
                 className="h-4 w-4 shrink-0 text-muted"
                 viewBox="0 0 24 24"
@@ -112,7 +119,16 @@ export function GlobalSearch({ collapsed }: { collapsed: boolean }) {
               <input
                 ref={inputRef}
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setQuery(next);
+                  if (next.trim().length < 2) {
+                    setResults([]);
+                    setLoading(false);
+                  } else {
+                    setLoading(true);
+                  }
+                }}
                 placeholder="Search leads and customers by name, company, or phone…"
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted focus:outline-none"
               />

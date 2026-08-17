@@ -3,29 +3,31 @@ import { formatDateTime, titleCase } from "@/lib/format";
 import { Card, EmptyState, Stat } from "@/components/ui";
 import { removeMachine } from "./actions";
 import { AddMachineForm } from "./upload-form";
+import { DataStateNotice } from "@/components/data-state-notice";
+import { WorkspaceHeader } from "@/components/workspace";
 
 export const dynamic = "force-dynamic";
 
 export default async function MachinesPage() {
-  const [{ machines }, { documents }] = await Promise.all([
+  const [machinesResult, documentsResult] = await Promise.all([
     getMachines(),
     getMachineDocuments(),
   ]);
+  const { machines } = machinesResult;
+  const { documents } = documentsResult;
 
   const indexed = documents.filter((doc) => doc.indexed_at).length;
   const categories = new Set(machines.map((machine) => machine.category)).size;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Product catalog
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Upload a brochure and the agent can answer questions about that
-          machine immediately — no developer required.
-        </p>
-      </div>
+      <DataStateNotice
+        states={[machinesResult._dataState, documentsResult._dataState]}
+      />
+      <WorkspaceHeader
+        title="Product catalog"
+        description="Upload a brochure and the agent can answer questions about that machine immediately — no developer required."
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Machines" value={machines.length} />

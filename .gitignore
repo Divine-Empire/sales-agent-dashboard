@@ -42,3 +42,4 @@ next-env.d.ts
 
 # .env.example documents required variables and holds no secrets.
 !.env.example
+.agents/

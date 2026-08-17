@@ -1,33 +1,32 @@
 import { getOptOuts } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
-import { Card, EmptyState } from "@/components/ui";
+import { EmptyState } from "@/components/ui";
+import { DataStateNotice } from "@/components/data-state-notice";
+import { DataSurface, WorkspaceHeader } from "@/components/workspace";
 
 export const dynamic = "force-dynamic";
 
 export default async function OptOutsPage() {
-  const { opt_outs } = await getOptOuts();
+  const optOutsResult = await getOptOuts();
+  const { opt_outs } = optOutsResult;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Opt-out register
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Customers who asked not to be contacted. The agent stops replying to
-          these numbers immediately and permanently.
-        </p>
-      </div>
+      <DataStateNotice states={[optOutsResult._dataState]} />
+      <WorkspaceHeader
+        title="Opt-out register"
+        description="Customers who asked not to be contacted. The agent stops replying to these numbers immediately and permanently."
+      />
 
-      <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-5 py-3.5">
-        <p className="text-sm text-amber-200/90">
+      <div className="border-l-2 border-amber-500 bg-amber-500/6 px-4 py-3">
+        <p className="text-sm leading-5 text-amber-900 dark:text-amber-200">
           Opt-outs are enforced at the webhook, before the agent runs — not by
           asking the model to remember. Clearing a conversation does not remove
           anyone from this list.
         </p>
       </div>
 
-      <Card title={`${opt_outs.length} opted out`}>
+      <DataSurface title={`${opt_outs.length} opted out`}>
         {opt_outs.length === 0 ? (
           <EmptyState
             title="Nobody has opted out"
@@ -67,7 +66,7 @@ export default async function OptOutsPage() {
             </table>
           </div>
         )}
-      </Card>
+      </DataSurface>
     </div>
   );
 }

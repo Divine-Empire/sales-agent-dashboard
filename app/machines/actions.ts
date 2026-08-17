@@ -7,6 +7,7 @@ import {
   deleteMachine,
   uploadMachineDocument,
 } from "@/lib/api";
+import { requireDashboardSession } from "@/lib/auth";
 
 export interface UploadState {
   ok: boolean;
@@ -25,6 +26,7 @@ export async function uploadDocument(
   _prev: UploadState | null,
   formData: FormData,
 ): Promise<UploadState> {
+  await requireDashboardSession();
   const file = formData.get("file");
   const name = String(formData.get("name") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
@@ -73,6 +75,7 @@ export async function addFromText(
   _prev: UploadState | null,
   formData: FormData,
 ): Promise<UploadState> {
+  await requireDashboardSession();
   const name = String(formData.get("name") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const text = String(formData.get("text") ?? "").trim();
@@ -100,12 +103,9 @@ export async function addFromText(
 }
 
 export async function removeMachine(formData: FormData) {
+  await requireDashboardSession();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  try {
-    await deleteMachine(id);
-  } catch (error) {
-    console.error("[machines] delete failed", error);
-  }
+  await deleteMachine(id);
   revalidatePath("/machines");
 }

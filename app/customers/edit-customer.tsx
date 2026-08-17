@@ -2,21 +2,25 @@
 
 import { useRef, useState } from "react";
 import type { Customer } from "@/lib/api";
+import { FIELD_CLASS } from "@/components/form-styles";
 import { editCustomer } from "./actions";
 
-const field =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted/70 focus:border-blue-500 focus:outline-none";
+const field = FIELD_CLASS;
 const label = "block text-xs font-medium uppercase tracking-wide text-muted";
 
 export function EditCustomerButton({ customer }: { customer: Customer }) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
         className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-border hover:text-foreground"
       >
         Edit
@@ -40,12 +44,24 @@ export function EditCustomerButton({ customer }: { customer: Customer }) {
             <form
               ref={formRef}
               action={async (formData) => {
-                await editCustomer(formData);
-                setOpen(false);
+                const result = await editCustomer(formData);
+                if (result.ok) {
+                  setOpen(false);
+                } else {
+                  setError(result.message);
+                }
               }}
               className="mt-4 space-y-3"
             >
               <input type="hidden" name="id" value={customer.id} />
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-500/25 dark:text-red-300"
+                >
+                  {error}
+                </p>
+              )}
               <div>
                 <label className={label} htmlFor="name">
                   Name
