@@ -48,6 +48,7 @@ export function ConversationListShell({
   activeFilter,
   emptyTitle,
   emptyHint,
+  footer,
   children,
 }: {
   channel: ChannelTone;
@@ -64,6 +65,8 @@ export function ConversationListShell({
   activeFilter?: string;
   emptyTitle?: string;
   emptyHint?: string;
+  /** Rendered under the rows — used for "Load more" pagination. */
+  footer?: ReactNode;
   children?: ReactNode;
 }) {
   const tone = TONES[channel];
@@ -144,7 +147,10 @@ export function ConversationListShell({
             )}
           </div>
         ) : (
-          <ul className="divide-y divide-border/70">{children}</ul>
+          <>
+            <ul className="divide-y divide-border/70">{children}</ul>
+            {footer}
+          </>
         )}
       </div>
     </aside>

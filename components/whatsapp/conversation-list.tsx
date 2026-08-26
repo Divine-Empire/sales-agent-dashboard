@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ChannelConversation } from "@/lib/channel-types";
 import { timeAgo } from "@/lib/format";
 import {
@@ -21,13 +22,17 @@ export function WhatsAppConversationList({
   activeId,
   query,
   view,
-  total,
+  loaded,
+  nextCursor,
 }: {
   conversations: ChannelConversation[];
   activeId?: string;
   query?: string;
   view: string;
-  total: number;
+  /** Rows on screen. The portal exposes no total, so we do not invent one. */
+  loaded: number;
+  /** `last_message_at` of the oldest row; null when there is no further page. */
+  nextCursor: string | null;
 }) {
   const filters = VIEWS.map((item) => {
     const params = new URLSearchParams();
@@ -42,7 +47,11 @@ export function WhatsAppConversationList({
       channel="whatsapp"
       activeId={activeId}
       title="WhatsApp"
-      subtitle={`${total} ${total === 1 ? "conversation" : "conversations"}`}
+      subtitle={
+        nextCursor
+          ? `${loaded} shown · more available`
+          : `${loaded} ${loaded === 1 ? "conversation" : "conversations"}`
+      }
       status={
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-500/20 dark:text-emerald-300">
           <span
@@ -59,6 +68,24 @@ export function WhatsAppConversationList({
       hiddenFields={{ view }}
       filters={filters}
       activeFilter={view}
+      footer={
+        nextCursor ? (
+          <div className="border-t border-border/70 p-3">
+            <Link
+              href={(() => {
+                const params = new URLSearchParams();
+                if (view !== "all") params.set("view", view);
+                if (query) params.set("q", query);
+                params.set("before", nextCursor);
+                return `/conversations/whatsapp?${params}`;
+              })()}
+              className="block rounded-lg border border-border px-3 py-2 text-center text-xs font-medium text-muted transition hover:bg-background hover:text-foreground focus-visible:outline-2 focus-visible:outline-emerald-500"
+            >
+              Load older conversations
+            </Link>
+          </div>
+        ) : undefined
+      }
       emptyTitle={query ? "No conversations match" : "No conversations yet"}
       emptyHint={
         query

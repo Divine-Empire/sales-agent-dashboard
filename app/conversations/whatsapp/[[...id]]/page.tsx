@@ -13,12 +13,21 @@ export default async function WhatsAppPage({
   searchParams,
 }: {
   params: Promise<{ id?: string[] }>;
-  searchParams: Promise<{ q?: string; view?: string }>;
+  searchParams: Promise<{ q?: string; view?: string; before?: string }>;
 }) {
-  const [{ id }, { q, view = "all" }] = await Promise.all([params, searchParams]);
+  const [{ id }, { q, view = "all", before }] = await Promise.all([params, searchParams]);
   const activeId = id?.[0];
 
-  const listPromise = getWhatsAppConversations({ limit: 40, filter: view, q });
+  // The portal holds ~11.7k conversations, so this pages rather than trying to
+  // load them all: 40 per view, `before` carrying the previous page's
+  // nextCursor (a last_message_at timestamp), same cursor contract the
+  // portal's own inbox uses for its infinite scroll.
+  const listPromise = getWhatsAppConversations({
+    limit: 40,
+    filter: view,
+    q,
+    cursor: before,
+  });
 
   // getWhatsAppConversation throws NotFoundError only when the backend
   // positively answered "no such thread". Any other failure returns an
@@ -80,7 +89,8 @@ export default async function WhatsAppPage({
           activeId={activeId}
           query={q}
           view={view}
-          total={list.count}
+          loaded={conversations.length}
+          nextCursor={list.has_more ? list.next_cursor : null}
         />
 
         {!thread?.conversation ? (
