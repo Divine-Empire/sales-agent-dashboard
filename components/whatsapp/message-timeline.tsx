@@ -97,7 +97,7 @@ function MessageContent({ message }: { message: ChannelMessage }) {
 export function WhatsAppMessageTimeline({ messages }: { messages: ChannelMessage[] }) {
   return (
     <TimelineViewport
-      label="Fictional WhatsApp message timeline"
+      label="WhatsApp message timeline"
       updateKey={messages.at(-1)?.id ?? String(messages.length)}
     >
       {messages.map((message, index) => {

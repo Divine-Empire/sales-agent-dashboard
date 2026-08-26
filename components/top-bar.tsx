@@ -18,7 +18,7 @@ const TITLES: Record<string, string> = {
 
 function titleFor(pathname: string): string {
   if (pathname.startsWith("/conversations/telegram")) return "Telegram inbox";
-  if (pathname.startsWith("/conversations/whatsapp")) return "WhatsApp preview";
+  if (pathname.startsWith("/conversations/whatsapp")) return "WhatsApp";
   if (pathname.startsWith("/conversations/")) return "Conversation";
   return TITLES[pathname] ?? "Sales CRM";
 }

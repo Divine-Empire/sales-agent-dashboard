@@ -213,6 +213,146 @@ export function getConversations(params?: {
   );
 }
 
+// ---------------------------------------------------------------------------
+// WhatsApp — real conversations, proxied by the sales-agent backend from the
+// whatsapp-portal. This project never reads the portal's database or holds its
+// credentials; it calls the same backend, with the same key, as everything
+// else here.
+//
+// `available: false` means the backend reached us but could not reach the
+// portal. That is different from `_dataState.status === "unavailable"` (this
+// dashboard could not reach the backend at all), and different again from a
+// genuinely empty inbox. The UI distinguishes all three.
+// ---------------------------------------------------------------------------
+
+export interface WhatsAppContact {
+  id: string | null;
+  name: string;
+  phone_number: string;
+}
+
+export interface WhatsAppConversationItem {
+  id: string;
+  contact: WhatsAppContact;
+  last_message: string;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+export interface WhatsAppMessageItem {
+  id: string;
+  wa_message_id: string | null;
+  direction: "inbound" | "outbound";
+  content: string;
+  message_type: string;
+  status: string | null;
+  created_at: string;
+  delivered_at: string | null;
+  seen_at: string | null;
+  template_name: string | null;
+  interactive_title: string | null;
+  media_url: string | null;
+  mime_type: string | null;
+  file_name: string | null;
+  interest_status: string | null;
+  source: string | null;
+  error_code: string | null;
+  error_message: string | null;
+}
+
+export function getWhatsAppConversations(params?: {
+  limit?: number;
+  cursor?: string;
+  filter?: string;
+  q?: string;
+}) {
+  const query = new URLSearchParams();
+  query.set("limit", String(params?.limit ?? 30));
+  if (params?.cursor) query.set("cursor", params.cursor);
+  if (params?.filter && params.filter !== "all") query.set("filter", params.filter);
+  if (params?.q) query.set("q", params.q);
+  return safe<{
+    count: number;
+    conversations: WhatsAppConversationItem[];
+    has_more: boolean;
+    next_cursor: string | null;
+    available: boolean;
+  }>(`/api/whatsapp/conversations?${query}`, {
+    count: 0,
+    conversations: [],
+    has_more: false,
+    next_cursor: null,
+    available: false,
+  });
+}
+
+/** Thrown when the backend says the thread does not exist, so the page can
+ * render a 404 rather than an "unavailable" state. This bypasses `safe()`,
+ * which flattens every failure into a fallback and would otherwise make a
+ * real 404 indistinguishable from the portal being down.
+ *
+ * Identified by a literal flag, not `instanceof`: the production build
+ * minifies class names per chunk, so a class thrown in one chunk fails an
+ * `instanceof` check against the same class imported into another. That bug
+ * only appears in `next build`, never in dev or typecheck. */
+export class NotFoundError extends Error {
+  readonly isNotFound = true as const;
+}
+
+/** Use this rather than `instanceof NotFoundError` — see the note above. */
+export function isNotFoundError(error: unknown): error is NotFoundError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { isNotFound?: unknown }).isNotFound === true
+  );
+}
+
+export interface WhatsAppThreadResponse {
+  conversation: {
+    id: string;
+    last_message_at: string | null;
+    unread_count: number;
+    contact: WhatsAppContact;
+  } | null;
+  count: number;
+  messages: WhatsAppMessageItem[];
+  available: boolean;
+}
+
+export async function getWhatsAppConversation(
+  id: string,
+  limit = 150,
+): Promise<ApiData<WhatsAppThreadResponse>> {
+  const path = `/api/whatsapp/conversations/${encodeURIComponent(id)}?limit=${limit}`;
+  try {
+    const data = await request<WhatsAppThreadResponse>(path);
+    return {
+      ...data,
+      _dataState: { status: "ready", fetchedAt: new Date().toISOString() },
+    };
+  } catch (error) {
+    // A 404 is a real answer ("no such thread"), not a failure to answer —
+    // it must reach the page so it can render notFound() rather than an
+    // "unavailable" banner over an empty pane.
+    if (error instanceof ApiError && error.status === 404) {
+      throw new NotFoundError(`WhatsApp conversation ${id} not found`);
+    }
+    console.error(`[api] ${path}`, error);
+    return {
+      conversation: null,
+      count: 0,
+      messages: [],
+      available: false,
+      _dataState: {
+        status: "unavailable",
+        fetchedAt: new Date().toISOString(),
+        message: "This conversation could not be loaded from the sales agent.",
+      },
+    };
+  }
+}
+
 export function getHealth() {
   return safe<{ status: string; service: string }>("/health", {
     status: "unreachable",

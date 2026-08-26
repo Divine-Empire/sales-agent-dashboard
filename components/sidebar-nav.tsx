@@ -15,7 +15,7 @@ const NAV_GROUPS: {
       { href: "/conversations/telegram", label: "Telegram", icon: "send" },
       {
         href: "/conversations/whatsapp",
-        label: "WhatsApp preview",
+        label: "WhatsApp",
         icon: "message",
       },
     ],
