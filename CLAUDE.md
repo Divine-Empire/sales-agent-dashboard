@@ -114,9 +114,14 @@ session is actively working on it in parallel** — see that repo's
 ## WhatsApp — hard boundary, do not cross without explicit instruction
 
 The client's real WhatsApp Business Cloud API credentials exist in the
-backend's `.env` now, but:
+backend's `.env`, and as of 2026-08-26 WhatsApp is live end to end. What that
+does and does not permit here:
 
-- **The WhatsApp adapter is not implemented on the sales-agent backend.**
+- **The sales-agent backend now answers WhatsApp automatically**, via
+  `WhatsAppPortalAdapter` — it sends through the portal's own
+  `/api/send-message`, never Meta directly, so the portal stays the single
+  writer of its `whatsapp_portal_messages`. (An older line here said the
+  adapter was unimplemented; that is no longer true.)
 - **The same phone number is currently live in production** on a separate,
   already-mature system: `whatsapp-portal-divine.vercel.app`, repo
   `Divine-Empire/whatsapp-portal` (sibling directory `../whatsapp-portal`,
@@ -163,18 +168,25 @@ backend's `.env` now, but:
     are deleted. Sending stays disabled pending operator permissions and an
     audit trail — the AI answers automatically, and the read-only note points
     an operator at the portal to step in.
-- Until that integration is explicitly designed and approved, WhatsApp work
-  in this dashboard **must stay UI-only against local fixtures** — no calls
-  to Google Sheets, Apps Script, the WhatsApp portal's Supabase project, or
-  the Meta Graph API, and no use of the real WhatsApp credentials, per the
-  boundary already written into `.agents/improvement.md` §1 and §8. That
-  constraint is correct and should not be loosened without the user saying
-  so explicitly.
+  - **Pagination**: the portal holds ~11,700 conversations. The list renders
+    50 and grows by 50 via a `?show=<count>` URL param — a growing count, NOT
+    a moving cursor window. An earlier version used `?before=<cursor>` and
+    each click *replaced* the rows on screen, which read as conversations
+    vanishing; don't reintroduce that shape. `MAX_SHOWN` (2000) is a
+    render-weight guard, not a product limit; server-side search is the tool
+    past it. Filters (`All`/`Unread`/`Opened`) mirror what the portal can
+    answer — it tracks unread counts, not lead temperature.
+- **The fixture-only rule is superseded** (it applied until the integration
+  was designed; it now is). What remains binding, and is the point of the
+  proxy design: this dashboard makes **no** call to Google Sheets, the Apps
+  Script, the portal's Supabase, or the Meta Graph API, and holds no WhatsApp
+  or portal credentials. Everything goes through the sales-agent backend with
+  the one existing API key. Do not loosen that without the user saying so.
 - Never copy the `whatsapp-portal` repo's code, secrets, or database access
   into this project. Reuse it conceptually (message/status model, date
-  grouping, list density) as the improvement plan already specifies, not by
-  importing it — unless and until the integration decision above says
-  otherwise.
+  grouping, list density), not by importing it. Reading its source to learn
+  how it solves something is fine and encouraged — the pagination fix above
+  came from matching its own inbox behaviour.
 
 ## Current improvement plan
 
