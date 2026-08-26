@@ -34,13 +34,9 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   UI has independent list/timeline/inspector panes, local search, honest
   missing-summary handling, and mobile list-to-chat navigation. Legacy
   `/conversations/[id]` URLs redirect to the canonical Telegram route.
-- Phase 3: `/conversations/whatsapp/[[...id]]` **was** a fictional preview and
-  is now live and read-only (2026-08-26). It reads real threads from the
-  whatsapp-portal through the sales-agent backend's `/api/whatsapp/*`;
-  `lib/whatsapp-live.ts` maps portal records onto the shared channel contract.
-  The fixtures, fixture adapter and fixture CRM inspector are deleted. Still
-  no direct portal fetch, no portal Supabase access, no portal credentials
-  here, and no enabled send control — see the WhatsApp section below.
+- Phase 3: `/conversations/whatsapp/[[...id]]` — live and read-only since
+  2026-08-26 (it began as a fixture preview). Details in the WhatsApp section
+  below; that section is authoritative for this tab.
 - Phase 4: Telegram and WhatsApp share the channel contract, conversation
   list shell/rows, contact header, timeline viewport, and date separators in
   `components/conversations/`. Channel-specific message bodies and CRM
@@ -140,48 +136,33 @@ does and does not permit here:
   Script referenced in the sales-agent repo's `app_script/`), and a
   keyword-based interest classifier. It is not a stub or a prototype; it is
   what the client actually uses today for WhatsApp.
-- **As of 2026-08-26, the plan is to surface it inside this dashboard's
-  WhatsApp tab** (currently the fixture-only preview described below) —
-  but the integration shape (read-only view into the portal's own Supabase?
-  a new API surface on the sales-agent backend? something else?) has not
-  been decided yet. Do not start wiring this up from assumptions; the
-  connection method is still an open design decision, and the WhatsApp
-  number/webhook collision risk above still applies to any approach that
-  would register a second consumer against the same Meta webhook.
-- **Backend/portal integration landed 2026-08-26 (this dashboard unchanged).**
-  The AI agent now answers inbound WhatsApp messages: the portal's Meta
-  webhook forwards them to `sales-agent`'s `/webhooks/whatsapp-inbound`, and
-  the agent replies by calling the portal's own `/api/send-message`. Two
-  facts from that work matter here:
-  - **Meta's webhook points at `whatsapp-portal`**, verified against its live
-    Supabase — *not* at the Google Apps Script, and not at the sales-agent
-    backend. Any earlier note (here or elsewhere) implying the Apps Script
-    receives Meta traffic is wrong; its `doPost` is legacy/dead for inbound.
-  - **The WhatsApp tab is now live (2026-08-26), read-only.** It renders real
-    conversations from the portal via the sales-agent backend's
-    `GET /api/whatsapp/conversations` and
-    `GET /api/whatsapp/conversations/{id}` — the same server-only
-    `lib/api.ts` client and API key as everything else. This project still
-    does **not** read the portal's Supabase or hold its credentials; that
-    boundary held. `lib/whatsapp-live.ts` maps portal records onto the shared
-    channel contract; the fixtures, fixture adapter and fixture CRM inspector
-    are deleted. Sending stays disabled pending operator permissions and an
-    audit trail — the AI answers automatically, and the read-only note points
-    an operator at the portal to step in.
-  - **Pagination**: the portal holds ~11,700 conversations. The list renders
-    50 and grows by 50 via a `?show=<count>` URL param — a growing count, NOT
-    a moving cursor window. An earlier version used `?before=<cursor>` and
-    each click *replaced* the rows on screen, which read as conversations
-    vanishing; don't reintroduce that shape. `MAX_SHOWN` (2000) is a
-    render-weight guard, not a product limit; server-side search is the tool
-    past it. Filters (`All`/`Unread`/`Opened`) mirror what the portal can
-    answer — it tracks unread counts, not lead temperature.
-- **The fixture-only rule is superseded** (it applied until the integration
-  was designed; it now is). What remains binding, and is the point of the
-  proxy design: this dashboard makes **no** call to Google Sheets, the Apps
-  Script, the portal's Supabase, or the Meta Graph API, and holds no WhatsApp
-  or portal credentials. Everything goes through the sales-agent backend with
-  the one existing API key. Do not loosen that without the user saying so.
+- **The WhatsApp tab is live and read-only** (2026-08-26). It renders real
+  threads from the portal via the sales-agent backend's
+  `GET /api/whatsapp/conversations` and `/api/whatsapp/conversations/{id}` —
+  the same server-only `lib/api.ts` client and API key as every other
+  endpoint here. `lib/whatsapp-live.ts` maps portal records onto the shared
+  channel contract. The fixtures, fixture adapter and fixture CRM inspector
+  are deleted. Sending stays disabled pending operator permissions and an
+  audit trail; the AI answers automatically, and the read-only note points an
+  operator at the portal to step in.
+- **Pagination**: the portal holds ~11,700 conversations. The list renders 50
+  and grows by 50 via a `?show=<count>` URL param — a growing count, NOT a
+  moving cursor window. An earlier version used `?before=<cursor>` and each
+  click *replaced* the rows on screen, which read as conversations vanishing;
+  do not reintroduce that shape. `MAX_SHOWN` (2000) is a render-weight guard,
+  not a product limit; server-side search is the tool past it. Filters
+  (`All`/`Unread`/`Opened`) mirror what the portal can answer — it tracks
+  unread counts, not lead temperature.
+- **The right pane reports delivery reality** (message counts, failures, last
+  inbound, interest signal), not the fixture inspector's summary/next-action/
+  budget fields. Those live in the sales-agent database keyed by
+  `whatsapp:<phone>` and are not part of a portal conversation record —
+  reusing those labels would print a column of em-dashes.
+- **The rule that still binds** — and the whole point of the proxy design:
+  this dashboard makes **no** call to Google Sheets, the Apps Script, the
+  portal's Supabase, or the Meta Graph API, and holds no WhatsApp or portal
+  credentials. Everything goes through the sales-agent backend on the one
+  existing API key. Do not loosen that without the user saying so.
 - Never copy the `whatsapp-portal` repo's code, secrets, or database access
   into this project. Reuse it conceptually (message/status model, date
   grouping, list density), not by importing it. Reading its source to learn
@@ -190,13 +171,13 @@ does and does not permit here:
 
 ## Current improvement plan
 
-`.agents/improvement.md` is the active plan for this repo (CRM restructure:
-shared shell, Telegram inbox backed by real data, WhatsApp preview backed by
-fixtures, auth, honest loading/error/stale states). Reviewed against the
-actual backend on 2026-08-17 — feasible, its own scope boundaries are sound,
-and its assumptions about `conversation_id` stability, missing-summary
-handling, and the missing inbox-list/unread-tracking endpoints all check out
-against the real API. Follow its phase order; Phase 0 (auth + honest data
+`.agents/improvement.md` was the plan for the CRM restructure (shared shell,
+Telegram inbox on real data, WhatsApp preview on fixtures, auth, honest
+loading/error/stale states). Phases 0–6 are complete, so it is now history
+rather than a work list — and note its WhatsApp sections are **superseded**:
+that tab runs on real portal data now, not fixtures. Its §1/§8 boundary
+language is likewise superseded by the WhatsApp section above. Follow the
+phase order only if picking up remaining polish; Phase 0 (auth + honest data
 states) is explicitly release-blocking and should land before the visual
 restructure. Phases 0–6 are complete; keep the phase table and implementation
 notes current if new work is added.
