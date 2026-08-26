@@ -113,23 +113,61 @@ session is actively working on it in parallel** — see that repo's
 The client's real WhatsApp Business Cloud API credentials exist in the
 backend's `.env` now, but:
 
-- **The WhatsApp adapter is not implemented on the backend.**
-- **The same phone number is currently live in production** on a separate
-  system (`whatsapp-portal-divine.vercel.app`, its own Supabase project —
-  not ours; plus a Google Apps Script receiving Meta's webhook directly).
-  Meta allows one webhook per number, so this is a real, not hypothetical,
+- **The WhatsApp adapter is not implemented on the sales-agent backend.**
+- **The same phone number is currently live in production** on a separate,
+  already-mature system: `whatsapp-portal-divine.vercel.app`, repo
+  `Divine-Empire/whatsapp-portal` (sibling directory `../whatsapp-portal`,
+  audited 2026-08-26 — see that repo's own `CLAUDE.md` for full detail). It
+  has its own Supabase project (not ours), its own Vercel deployment (Vercel
+  project `whatsapp-portal`, team `mis-thedivineemps-projects` — the same
+  team this dashboard's own Vercel project lives under; confirmed live via
+  `vercel ls`/`vercel env ls` on 2026-08-26, most recent deploy 2 days old),
+  and registers Meta's webhook directly against the real number. Meta allows
+  one webhook per number, so registering anything from this dashboard or the
+  sales-agent backend against that same number is a real, not hypothetical,
   collision risk.
-- Any WhatsApp work in this dashboard **must stay UI-only against local
-  fixtures** — no calls to Google Sheets, Apps Script, the WhatsApp portal's
-  Supabase project, or the Meta Graph API, and no use of the real WhatsApp
-  credentials, per the boundary already written into
-  `.agents/improvement.md` §1 and §8. That constraint is correct and should
-  not be loosened without the user saying so explicitly — it matches what
-  the user has told the backend session directly.
+- That portal is a real, feature-complete WhatsApp Business inbox — chat UI,
+  template sender/tracker with delivery status, media send/receive, a
+  Google-Sheets bulk-send bridge (`/api/sync-sheet`, fed by the same Apps
+  Script referenced in the sales-agent repo's `app_script/`), and a
+  keyword-based interest classifier. It is not a stub or a prototype; it is
+  what the client actually uses today for WhatsApp.
+- **As of 2026-08-26, the plan is to surface it inside this dashboard's
+  WhatsApp tab** (currently the fixture-only preview described below) —
+  but the integration shape (read-only view into the portal's own Supabase?
+  a new API surface on the sales-agent backend? something else?) has not
+  been decided yet. Do not start wiring this up from assumptions; the
+  connection method is still an open design decision, and the WhatsApp
+  number/webhook collision risk above still applies to any approach that
+  would register a second consumer against the same Meta webhook.
+- **Backend/portal integration landed 2026-08-26 (this dashboard unchanged).**
+  The AI agent now answers inbound WhatsApp messages: the portal's Meta
+  webhook forwards them to `sales-agent`'s `/webhooks/whatsapp-inbound`, and
+  the agent replies by calling the portal's own `/api/send-message`. Two
+  facts from that work matter here:
+  - **Meta's webhook points at `whatsapp-portal`**, verified against its live
+    Supabase — *not* at the Google Apps Script, and not at the sales-agent
+    backend. Any earlier note (here or elsewhere) implying the Apps Script
+    receives Meta traffic is wrong; its `doPost` is legacy/dead for inbound.
+  - **This dashboard's WhatsApp tab is still fixture-only and must stay that
+    way** until its own integration is designed. The backend work did not
+    give this dashboard a WhatsApp data source; real WhatsApp conversations
+    live in the portal's Supabase, which this project still must not read.
+    When that integration is taken up, note the agent's replies DO appear in
+    the portal's tables (it writes through the portal on purpose), so a
+    future read-only view would show complete threads, not half of them.
+- Until that integration is explicitly designed and approved, WhatsApp work
+  in this dashboard **must stay UI-only against local fixtures** — no calls
+  to Google Sheets, Apps Script, the WhatsApp portal's Supabase project, or
+  the Meta Graph API, and no use of the real WhatsApp credentials, per the
+  boundary already written into `.agents/improvement.md` §1 and §8. That
+  constraint is correct and should not be loosened without the user saying
+  so explicitly.
 - Never copy the `whatsapp-portal` repo's code, secrets, or database access
   into this project. Reuse it conceptually (message/status model, date
   grouping, list density) as the improvement plan already specifies, not by
-  importing it.
+  importing it — unless and until the integration decision above says
+  otherwise.
 
 ## Current improvement plan
 
