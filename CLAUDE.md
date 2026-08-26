@@ -34,13 +34,13 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   UI has independent list/timeline/inspector panes, local search, honest
   missing-summary handling, and mobile list-to-chat navigation. Legacy
   `/conversations/[id]` URLs redirect to the canonical Telegram route.
-- Phase 3: `/conversations/whatsapp/[[...id]]` is a deterministic, fictional
-  CRM preview. `lib/whatsapp-fixtures.ts` is the only data source and
-  `lib/whatsapp-adapter.ts` maps it into the UI-only channel contract. The
-  workspace demonstrates templates, replies, interactive choices, media,
-  delivery/read/failure states, classification, and customer context. It has
-  no WhatsApp-related fetch, environment access, embedded portal, or enabled
-  mutation control. The preview banner and disabled composer are mandatory.
+- Phase 3: `/conversations/whatsapp/[[...id]]` **was** a fictional preview and
+  is now live and read-only (2026-08-26). It reads real threads from the
+  whatsapp-portal through the sales-agent backend's `/api/whatsapp/*`;
+  `lib/whatsapp-live.ts` maps portal records onto the shared channel contract.
+  The fixtures, fixture adapter and fixture CRM inspector are deleted. Still
+  no direct portal fetch, no portal Supabase access, no portal credentials
+  here, and no enabled send control — see the WhatsApp section below.
 - Phase 4: Telegram and WhatsApp share the channel contract, conversation
   list shell/rows, contact header, timeline viewport, and date separators in
   `components/conversations/`. Channel-specific message bodies and CRM
@@ -72,8 +72,9 @@ backend send API have been explicitly designed.
 
 Authenticated CRM operators need complete customer phone numbers and channel
 identifiers. Do not visually mask these values in customer or conversation
-workspaces. WhatsApp preview fixtures must likewise use complete but obviously
-fictional, invalid numbers rather than masked placeholders.
+workspaces. Note WhatsApp profile names are free text and real ones contain
+newlines — collapse whitespace before rendering them in a single-line row
+(`lib/whatsapp-live.ts` does this).
 
 ## The backend you're calling
 
@@ -88,7 +89,9 @@ session is actively working on it in parallel** — see that repo's
 - Current `/api/*` surface: `leads`, `handovers` (GET + PATCH status +
   PATCH category-override), `conversations/{id}`, `overview`,
   `reports/{type}`, `customers` (GET + PATCH), `opt-outs`, `summaries`,
-  `logs`, `machines` (+ upload/text-add/delete). All require `X-API-Key`.
+  `logs`, `machines` (+ upload/text-add/delete), and `whatsapp/conversations`
+  (+ `whatsapp/conversations/{id}`, read-only, proxied from the portal). All
+  require `X-API-Key`.
 - `GET /api/conversations?limit=50&channel=telegram` is the dedicated inbox
   endpoint. It includes every conversation, customer/company identity, last
   message preview and role, latest lead score/category, handover status, and
@@ -149,13 +152,17 @@ backend's `.env` now, but:
     Supabase — *not* at the Google Apps Script, and not at the sales-agent
     backend. Any earlier note (here or elsewhere) implying the Apps Script
     receives Meta traffic is wrong; its `doPost` is legacy/dead for inbound.
-  - **This dashboard's WhatsApp tab is still fixture-only and must stay that
-    way** until its own integration is designed. The backend work did not
-    give this dashboard a WhatsApp data source; real WhatsApp conversations
-    live in the portal's Supabase, which this project still must not read.
-    When that integration is taken up, note the agent's replies DO appear in
-    the portal's tables (it writes through the portal on purpose), so a
-    future read-only view would show complete threads, not half of them.
+  - **The WhatsApp tab is now live (2026-08-26), read-only.** It renders real
+    conversations from the portal via the sales-agent backend's
+    `GET /api/whatsapp/conversations` and
+    `GET /api/whatsapp/conversations/{id}` — the same server-only
+    `lib/api.ts` client and API key as everything else. This project still
+    does **not** read the portal's Supabase or hold its credentials; that
+    boundary held. `lib/whatsapp-live.ts` maps portal records onto the shared
+    channel contract; the fixtures, fixture adapter and fixture CRM inspector
+    are deleted. Sending stays disabled pending operator permissions and an
+    audit trail — the AI answers automatically, and the read-only note points
+    an operator at the portal to step in.
 - Until that integration is explicitly designed and approved, WhatsApp work
   in this dashboard **must stay UI-only against local fixtures** — no calls
   to Google Sheets, Apps Script, the WhatsApp portal's Supabase project, or
