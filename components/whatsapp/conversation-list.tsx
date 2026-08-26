@@ -23,7 +23,7 @@ export function WhatsAppConversationList({
   query,
   view,
   loaded,
-  nextCursor,
+  nextShow,
 }: {
   conversations: ChannelConversation[];
   activeId?: string;
@@ -31,8 +31,8 @@ export function WhatsAppConversationList({
   view: string;
   /** Rows on screen. The portal exposes no total, so we do not invent one. */
   loaded: number;
-  /** `last_message_at` of the oldest row; null when there is no further page. */
-  nextCursor: string | null;
+  /** Next `show` count, or null when everything available is already shown. */
+  nextShow: number | null;
 }) {
   const filters = VIEWS.map((item) => {
     const params = new URLSearchParams();
@@ -48,7 +48,7 @@ export function WhatsAppConversationList({
       activeId={activeId}
       title="WhatsApp"
       subtitle={
-        nextCursor
+        nextShow
           ? `${loaded} shown · more available`
           : `${loaded} ${loaded === 1 ? "conversation" : "conversations"}`
       }
@@ -69,19 +69,22 @@ export function WhatsAppConversationList({
       filters={filters}
       activeFilter={view}
       footer={
-        nextCursor ? (
+        nextShow ? (
           <div className="border-t border-border/70 p-3">
             <Link
               href={(() => {
                 const params = new URLSearchParams();
                 if (view !== "all") params.set("view", view);
                 if (query) params.set("q", query);
-                params.set("before", nextCursor);
+                params.set("show", String(nextShow));
                 return `/conversations/whatsapp?${params}`;
               })()}
+              // Keeps the list scrolled where it was instead of jumping to the
+              // top, so the rows just added appear below what you were reading.
+              scroll={false}
               className="block rounded-lg border border-border px-3 py-2 text-center text-xs font-medium text-muted transition hover:bg-background hover:text-foreground focus-visible:outline-2 focus-visible:outline-emerald-500"
             >
-              Load older conversations
+              Show more
             </Link>
           </div>
         ) : undefined

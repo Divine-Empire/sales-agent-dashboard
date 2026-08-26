@@ -8,25 +8,30 @@ import { toChannelConversation, toChannelMessages } from "@/lib/whatsapp-live";
 
 export const dynamic = "force-dynamic";
 
+const PAGE_SIZE = 50;
+/** A guard, not a product limit: ~11.7k rows in one server render is already
+ *  a heavy page, and nobody scans that many by eye. Search is the tool past
+ *  this point, which is why it runs server-side against the portal. */
+const MAX_SHOWN = 2000;
+
 export default async function WhatsAppPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id?: string[] }>;
-  searchParams: Promise<{ q?: string; view?: string; before?: string }>;
+  searchParams: Promise<{ q?: string; view?: string; show?: string }>;
 }) {
-  const [{ id }, { q, view = "all", before }] = await Promise.all([params, searchParams]);
+  const [{ id }, { q, view = "all", show }] = await Promise.all([params, searchParams]);
   const activeId = id?.[0];
 
-  // The portal holds ~11.7k conversations, so this pages rather than trying to
-  // load them all: 40 per view, `before` carrying the previous page's
-  // nextCursor (a last_message_at timestamp), same cursor contract the
-  // portal's own inbox uses for its infinite scroll.
+  // "Show more" grows this count rather than moving a window, so every
+  // conversation loaded so far stays on screen. The backend assembles counts
+  // above the portal's per-response ceiling from several cursor-paged calls.
+  const requested = Math.min(Math.max(Number(show) || PAGE_SIZE, PAGE_SIZE), MAX_SHOWN);
   const listPromise = getWhatsAppConversations({
-    limit: 40,
+    limit: requested,
     filter: view,
     q,
-    cursor: before,
   });
 
   // getWhatsAppConversation throws NotFoundError only when the backend
@@ -90,7 +95,11 @@ export default async function WhatsAppPage({
           query={q}
           view={view}
           loaded={conversations.length}
-          nextCursor={list.has_more ? list.next_cursor : null}
+          nextShow={
+            list.has_more && conversations.length < MAX_SHOWN
+              ? Math.min(conversations.length + PAGE_SIZE, MAX_SHOWN)
+              : null
+          }
         />
 
         {!thread?.conversation ? (
