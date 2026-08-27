@@ -5,6 +5,7 @@ import {
   addMachineFromText,
   ApiError,
   deleteMachine,
+  updateMachine,
   uploadMachineDocument,
 } from "@/lib/api";
 import { requireDashboardSession } from "@/lib/auth";
@@ -108,4 +109,50 @@ export async function removeMachine(formData: FormData) {
   if (!id) return;
   await deleteMachine(id);
   revalidatePath("/machines");
+}
+
+export interface EditState {
+  ok: boolean;
+  message: string;
+}
+
+/** Edit a catalog entry's own fields (price, description, etc.) without
+ * re-uploading its source document — wired to the PATCH /api/machines/{id}
+ * route that already existed on the backend but had no dashboard UI. */
+export async function editMachine(
+  _prev: EditState | null,
+  formData: FormData,
+): Promise<EditState> {
+  await requireDashboardSession();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { ok: false, message: "Missing machine id." };
+
+  const name = String(formData.get("name") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const price_range = String(formData.get("price_range") ?? "").trim();
+  const lead_time = String(formData.get("lead_time") ?? "").trim();
+  const is_active = formData.get("is_active") === "on";
+
+  if (!name || !category) {
+    return { ok: false, message: "Name and category are required." };
+  }
+
+  try {
+    await updateMachine(id, {
+      name,
+      category,
+      description: description || undefined,
+      price_range: price_range || undefined,
+      lead_time: lead_time || undefined,
+      is_active,
+    });
+    revalidatePath("/machines");
+    return { ok: true, message: "Saved." };
+  } catch (error) {
+    console.error("[machines] edit failed", error);
+    const message =
+      error instanceof ApiError ? error.message : "Could not save changes.";
+    return { ok: false, message };
+  }
 }

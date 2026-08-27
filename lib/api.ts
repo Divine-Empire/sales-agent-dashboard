@@ -519,6 +519,22 @@ export function getMachines() {
   });
 }
 
+export interface Accessory {
+  id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export function getAccessories() {
+  return safe<{ count: number; accessories: Accessory[] }>(
+    "/api/accessories",
+    { count: 0, accessories: [] },
+  );
+}
+
 export interface MachineDocument {
   id: string;
   machine_id: string | null;
@@ -572,6 +588,65 @@ export async function addMachineFromText(form: FormData) {
 export async function deleteMachine(id: string) {
   return request<{ id: string; deleted: boolean }>(
     `/api/machines/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function updateMachine(
+  machineId: string,
+  fields: Partial<{
+    name: string;
+    category: string;
+    description: string;
+    price_range: string;
+    lead_time: string;
+    is_active: boolean;
+  }>,
+) {
+  return request<{ id: string }>(`/api/machines/${encodeURIComponent(machineId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
+  });
+}
+
+export async function createAccessory(fields: {
+  name: string;
+  category?: string;
+  description?: string;
+}) {
+  return request<{ id: string; name: string; chunks: number; embedded: number }>(
+    "/api/accessories",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    },
+  );
+}
+
+export async function updateAccessory(
+  accessoryId: string,
+  fields: Partial<{
+    name: string;
+    category: string;
+    description: string;
+    is_active: boolean;
+  }>,
+) {
+  return request<{ id: string }>(
+    `/api/accessories/${encodeURIComponent(accessoryId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    },
+  );
+}
+
+export async function deleteAccessory(id: string) {
+  return request<{ id: string; deleted: boolean }>(
+    `/api/accessories/${encodeURIComponent(id)}`,
     { method: "DELETE" },
   );
 }

@@ -26,6 +26,7 @@ const NAV_GROUPS: {
       { href: "/", label: "Overview", icon: "grid" },
       { href: "/leads", label: "Leads", icon: "list" },
       { href: "/handovers", label: "Handovers", icon: "handoff" },
+      { href: "/reports", label: "Reports", icon: "chart" },
     ],
   },
   {
@@ -33,17 +34,13 @@ const NAV_GROUPS: {
     items: [
       { href: "/customers", label: "Customers", icon: "users" },
       { href: "/machines", label: "Catalog", icon: "box" },
+      { href: "/accessories", label: "Accessories", icon: "box" },
     ],
-  },
-  {
-    label: "Insights",
-    items: [{ href: "/reports", label: "Reports", icon: "chart" }],
   },
   {
     label: "Operations",
     items: [
       { href: "/operations/health", label: "Service health", icon: "pulse" },
-      { href: "/logs", label: "AI performance", icon: "cpu" },
     ],
   },
   {

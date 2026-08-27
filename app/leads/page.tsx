@@ -6,6 +6,7 @@ import {
   EmptyState,
   ScoreBar,
 } from "@/components/ui";
+import { LeadWhyCell } from "@/components/leads/lead-why-cell";
 import { LeadBoard } from "@/components/leads/lead-board";
 import {
   DataTable,
@@ -30,28 +31,6 @@ const FILTERS: { value: string; label: string }[] = [
   { value: "cold", label: CATEGORY_LABELS.cold },
   { value: "not_interested", label: CATEGORY_LABELS.not_interested },
 ];
-
-/** Top scoring factors, so a rep sees WHY a lead ranks where it does. An
- * unexplained number is the first thing a sales manager argues with. */
-function TopFactors({ factors }: { factors: Record<string, number> }) {
-  const top = Object.entries(factors ?? {})
-    .filter(([, value]) => value > 0)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3);
-  if (top.length === 0) return <span className="text-muted/70">—</span>;
-  return (
-    <div className="flex flex-wrap gap-1">
-      {top.map(([name, value]) => (
-        <span
-          key={name}
-          className="rounded bg-border px-1.5 py-0.5 text-[11px] text-muted"
-        >
-          {titleCase(name)} {value}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 export default async function LeadsPage({
   searchParams,
@@ -152,7 +131,7 @@ export default async function LeadsPage({
                       {titleCase(lead.intent)}
                     </td>
                     <td className="px-5 py-3">
-                      <TopFactors factors={lead.factors} />
+                      <LeadWhyCell lead={lead} />
                     </td>
                     <td className="px-5 py-3 text-muted">
                       {lead.location ?? "—"}

@@ -61,6 +61,28 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   production build, and the disconnected-WhatsApp scan pass. A preview was
   deployed only to the linked `sales-agent-dashboard` Vercel project; no
   production promotion or `whatsapp-portal` change was made.
+- Phase 7 (2026-08-27): catalog editing, an accessories/parts catalog, lead
+  scoring transparency, and dashboard simplification. `/machines` gained a
+  per-row Edit action (`app/machines/edit-machine-form.tsx`) wired to the
+  backend's `PATCH /api/machines/{id}` — that route existed before this
+  phase but had no dashboard UI. New `/accessories` page (own top-level nav
+  entry under Records, not stacked into `/machines`) for the backend's new
+  flat accessories catalog — **no machine linkage yet**, deliberately
+  deferred; don't build UI implying that relationship exists until the
+  backend adds it. `/leads`'s "Why" column is now clickable
+  (`components/leads/lead-why-cell.tsx` + `factor-breakdown.tsx`) and expands
+  into every scored factor against its max weight, not just the top 3 — the
+  factor names/weights are a manually-kept mirror of the backend's
+  `FACTOR_WEIGHTS` (`app/intelligence.py`), since the dashboard has no
+  endpoint that returns them; if the backend ever changes those weights,
+  this component goes stale until someone updates it by hand.
+  `/logs` (raw LLM call/token/latency telemetry) was removed entirely — it
+  was the closest thing to an "AI Insights" panel and wasn't sales-facing;
+  the per-conversation Calls/Latency fields in the Telegram CRM inspector
+  still work, since those pull `getAiLogs` scoped to one conversation, which
+  was NOT removed from `lib/api.ts`. The "Insights" nav group (which only
+  ever wrapped Reports) was retired; Reports moved into the Pipeline group
+  alongside Overview/Leads/Handovers.
 
 The first Telegram version is intentionally read-only. Do not make its
 disabled composer operational until operator permissions, auditing, and a
@@ -85,9 +107,10 @@ session is actively working on it in parallel** — see that repo's
 - Current `/api/*` surface: `leads`, `handovers` (GET + PATCH status +
   PATCH category-override), `conversations/{id}`, `overview`,
   `reports/{type}`, `customers` (GET + PATCH), `opt-outs`, `summaries`,
-  `logs`, `machines` (+ upload/text-add/delete), and `whatsapp/conversations`
-  (+ `whatsapp/conversations/{id}`, read-only, proxied from the portal). All
-  require `X-API-Key`.
+  `logs`, `machines` (+ upload/text-add/delete/PATCH), `accessories`
+  (GET/POST/PATCH/DELETE, flat — no machine linkage yet, added 2026-08-27),
+  and `whatsapp/conversations` (+ `whatsapp/conversations/{id}`, read-only,
+  proxied from the portal). All require `X-API-Key`.
 - `GET /api/conversations?limit=50&channel=telegram` is the dedicated inbox
   endpoint. It includes every conversation, customer/company identity, last
   message preview and role, latest lead score/category, handover status, and

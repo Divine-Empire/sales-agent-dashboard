@@ -3,6 +3,7 @@ import { formatDateTime, titleCase } from "@/lib/format";
 import { Card, EmptyState, Stat } from "@/components/ui";
 import { removeMachine } from "./actions";
 import { AddMachineForm } from "./upload-form";
+import { MachineRowActions } from "./edit-machine-form";
 import { DataStateNotice } from "@/components/data-state-notice";
 import { WorkspaceHeader } from "@/components/workspace";
 
@@ -68,31 +69,34 @@ export default async function MachinesPage() {
                     key={machine.id}
                     className="transition-colors hover:bg-surface"
                   >
-                    <td className="px-5 py-3 text-foreground">{machine.name}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 align-top text-foreground">{machine.name}</td>
+                    <td className="px-5 py-3 align-top">
                       <code className="rounded bg-border px-1.5 py-0.5 text-xs text-foreground/80">
                         {machine.machine_code}
                       </code>
                     </td>
-                    <td className="px-5 py-3 text-muted">
+                    <td className="px-5 py-3 align-top text-muted">
                       {machine.category}
                     </td>
-                    <td className="px-5 py-3 text-muted">
+                    <td className="px-5 py-3 align-top text-muted">
                       {machine.price_range ?? "—"}
                     </td>
-                    <td className="px-5 py-3 text-muted">
+                    <td className="px-5 py-3 align-top text-muted">
                       {formatDateTime(machine.created_at)}
                     </td>
-                    <td className="px-5 py-3 text-right">
-                      <form action={removeMachine}>
-                        <input type="hidden" name="id" value={machine.id} />
-                        <button
-                          type="submit"
-                          className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
-                        >
-                          Remove
-                        </button>
-                      </form>
+                    <td className="px-5 py-3 align-top text-right">
+                      <div className="flex flex-wrap items-start justify-end gap-1">
+                        <MachineRowActions machine={machine} />
+                        <form action={removeMachine}>
+                          <input type="hidden" name="id" value={machine.id} />
+                          <button
+                            type="submit"
+                            className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                          >
+                            Remove
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))}
