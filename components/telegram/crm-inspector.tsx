@@ -1,6 +1,6 @@
 import type { ConversationSummary } from "@/lib/api";
 import { titleCase } from "@/lib/format";
-import { CategoryBadge, ScoreBar } from "@/components/ui";
+import { ScoreBreakdownToggle } from "./score-breakdown-toggle";
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -17,12 +17,14 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 
 export function CrmInspector({
   summary,
+  factors,
   llmCalls,
   tokens,
   averageLatency,
   model,
 }: {
   summary: ConversationSummary | null;
+  factors: Record<string, number> | null;
   llmCalls: number;
   tokens: number;
   averageLatency: number;
@@ -47,10 +49,14 @@ export function CrmInspector({
         </div>
       ) : (
         <div className="space-y-4 px-5 py-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {summary.lead_score !== null && <ScoreBar score={summary.lead_score} />}
-            <CategoryBadge category={summary.lead_category} />
-          </div>
+          {summary.lead_score !== null && (
+            <ScoreBreakdownToggle
+              score={summary.lead_score}
+              category={summary.lead_category}
+              factors={factors}
+              confidence={summary.ai_confidence}
+            />
+          )}
 
           {summary.summary && (
             <div>
@@ -82,14 +88,6 @@ export function CrmInspector({
             <div className="col-span-2">
               <Field label="Requirements" value={summary.requirements} />
             </div>
-            <Field
-              label="Confidence"
-              value={
-                summary.ai_confidence !== null
-                  ? `${Math.round(summary.ai_confidence * 100)}%`
-                  : null
-              }
-            />
             <Field label="Handover" value={titleCase(summary.handover_status)} />
           </dl>
         </div>

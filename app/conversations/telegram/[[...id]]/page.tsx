@@ -3,7 +3,7 @@ import { ConversationHeader } from "@/components/conversations/conversation-head
 import { CrmInspector } from "@/components/telegram/crm-inspector";
 import { TelegramConversationList } from "@/components/telegram/conversation-list";
 import { MessageTimeline } from "@/components/telegram/message-timeline";
-import { getAiLogs, getConversation, getConversations } from "@/lib/api";
+import { getAiLogs, getConversation, getConversations, getLeads } from "@/lib/api";
 import {
   adaptTelegramConversation,
   adaptTelegramThread,
@@ -44,13 +44,22 @@ export default async function TelegramInboxPage({
       )
     : allConversations;
 
-  const [detailResult, logsResult] = activeId
+  const [detailResult, logsResult, leadsResult] = activeId
     ? await Promise.all([
         getConversation(activeId),
         getAiLogs({ conversationId: activeId, limit: 50 }),
+        // Factor breakdown lives on the lead_scores row, not the conversation
+        // summary (app/models.py's ConversationSummary has no factors field
+        // — they're two different tables backend-side). No conversation_id
+        // filter exists on /api/leads, so this fetches a generous page and
+        // matches client-side, same approach /leads' own board view uses.
+        getLeads({ limit: 500 }),
       ])
-    : [null, null];
+    : [null, null, null];
   const thread = detailResult ? adaptTelegramThread(detailResult) : null;
+  const activeLead = leadsResult?.leads.find(
+    (lead) => lead.conversation_id === activeId,
+  );
   const activeConversation = allConversations.find(
     (conversation) => conversation.id === activeId,
   );
@@ -83,6 +92,7 @@ export default async function TelegramInboxPage({
           listResult._dataState,
           ...(detailResult ? [detailResult._dataState] : []),
           ...(logsResult ? [logsResult._dataState] : []),
+          ...(leadsResult ? [leadsResult._dataState] : []),
         ]}
       />
 
@@ -162,6 +172,7 @@ export default async function TelegramInboxPage({
 
               <CrmInspector
                 summary={thread?.summary ?? null}
+                factors={activeLead?.factors ?? null}
                 llmCalls={llmEntries.length}
                 tokens={tokens}
                 averageLatency={averageLatency}

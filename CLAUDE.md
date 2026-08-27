@@ -83,6 +83,20 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   was NOT removed from `lib/api.ts`. The "Insights" nav group (which only
   ever wrapped Reports) was retired; Reports moved into the Pipeline group
   alongside Overview/Leads/Handovers.
+- Phase 8 (2026-08-28): the Telegram CRM inspector's score row is now
+  expandable (`components/telegram/score-breakdown-toggle.tsx`, wraps the
+  existing `FactorBreakdown` from Phase 7's leads work) — clicking the
+  score/category reveals the same full per-factor breakdown `/leads`' "Why"
+  column shows, not just the bare number. Factors aren't on the conversation
+  summary backend-side (`app/models.py`'s `ConversationSummary` has no
+  `factors` field — they live only on `lead_scores`/`current_leads`), so
+  `app/conversations/telegram/[[...id]]/page.tsx` fetches `getLeads({limit:
+  500})` alongside the existing conversation/logs calls and matches by
+  `conversation_id` client-side — the same "no id filter on `/api/leads`,
+  fetch generously and match" pattern the leads board already used. If that
+  fetch misses (lead outside the 500-row window, or no `lead_scores` row
+  yet), the toggle still renders and says no breakdown is available rather
+  than silently showing empty.
 
 The first Telegram version is intentionally read-only. Do not make its
 disabled composer operational until operator permissions, auditing, and a
