@@ -23,16 +23,27 @@ function Result({ state }: { state: DocumentEditState | null }) {
   );
 }
 
-/** Renders the profile's `### Heading` / plain-paragraph markdown
- * (data/product_profile_template.md's shape, produced by the backend's
- * structure_product_profile) as actual headings and paragraphs — a rep
- * reading this should see a formatted profile, not raw "###" characters.
+/** Renders the profile's `##`/`###`/`####` heading + plain-paragraph
+ * markdown (produced by the backend's structure_product_profile /
+ * format_profile_markdown) as actual headings and paragraphs — a rep
+ * reading this should see a formatted profile, not raw "#" characters.
  * Deliberately a small hand-rolled parser rather than a markdown library:
- * the shape is fixed and narrow (## title, ### section, plain paragraphs),
- * not general-purpose markdown. */
+ * the shape is fixed and narrow, not general-purpose markdown.
+ *
+ * Four levels, not three: a document covering more than one type/variant
+ * (e.g. "Sokkia FX-200 Series" with FX-201 and FX-202) nests each variant's
+ * own 13 sections one level deeper than the ordinary single-variant case —
+ * `## machine title` -> `### Type: {variant}` -> `#### Section` — so this
+ * parser has to recognize up to 4 hashes, not just 2-3. Missing `####`
+ * originally meant every one of those section headings rendered as a
+ * literal "#### Features" line instead of a heading, found live on a real
+ * multi-variant document. Anything with 5+ hashes (shouldn't happen given
+ * the backend's own heading scheme, but parsed defensively rather than
+ * left as a literal "#####" line if it ever does) falls back to the
+ * deepest level this component renders. */
 function FormattedProfile({ content }: { content: string }) {
   const lines = content.split("\n");
-  const blocks: { type: "h2" | "h3" | "p"; text: string }[] = [];
+  const blocks: { type: "h2" | "h3" | "h4" | "p"; text: string }[] = [];
   let paragraph: string[] = [];
 
   const flush = () => {
@@ -47,12 +58,12 @@ function FormattedProfile({ content }: { content: string }) {
       flush();
       continue;
     }
-    if (trimmed.startsWith("### ")) {
+    const heading = trimmed.match(/^(#{2,})\s+(.*)$/);
+    if (heading) {
       flush();
-      blocks.push({ type: "h3", text: trimmed.slice(4) });
-    } else if (trimmed.startsWith("## ")) {
-      flush();
-      blocks.push({ type: "h2", text: trimmed.slice(3) });
+      const level = heading[1].length;
+      const type = level <= 2 ? "h2" : level === 3 ? "h3" : "h4";
+      blocks.push({ type, text: heading[2] });
     } else {
       paragraph.push(trimmed);
     }
@@ -77,13 +88,32 @@ function FormattedProfile({ content }: { content: string }) {
           );
         }
         if (block.type === "h3") {
+          // A "Type: {variant}" heading marks a distinct model within one
+          // machine's document (see the component doc comment) — visually
+          // separated with a top border + extra spacing so it reads as a
+          // new variant starting, not just another section within one.
+          const isVariantHeading = block.text.startsWith("Type: ");
           return (
             <h3
               key={index}
-              className="pt-2 text-left text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300"
+              className={
+                isVariantHeading
+                  ? "mt-2 border-t border-border pt-4 text-left text-base font-semibold text-foreground first:mt-0 first:border-t-0 first:pt-0"
+                  : "pt-3 text-left text-sm font-semibold text-foreground"
+              }
             >
               {block.text}
             </h3>
+          );
+        }
+        if (block.type === "h4") {
+          return (
+            <h4
+              key={index}
+              className="pt-2 text-left text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300"
+            >
+              {block.text}
+            </h4>
           );
         }
         return (
