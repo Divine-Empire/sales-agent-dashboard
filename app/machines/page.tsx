@@ -60,7 +60,7 @@ export default async function MachinesPage() {
                   <th className="px-5 py-2.5 font-medium">Code</th>
                   <th className="px-5 py-2.5 font-medium">Category</th>
                   <th className="px-5 py-2.5 font-medium">Price range</th>
-                  <th className="px-5 py-2.5 font-medium">Added</th>
+                  <th className="px-5 py-2.5 font-medium">Added / Updated</th>
                   <th className="px-5 py-2.5" />
                 </tr>
               </thead>
@@ -95,7 +95,17 @@ export default async function MachinesPage() {
                         {machine.price_range ?? "—"}
                       </td>
                       <td className="px-5 py-3 align-top text-muted">
-                        {formatDateTime(machine.created_at)}
+                        {machine.updated_at &&
+                        machine.updated_at !== machine.created_at ? (
+                          <>
+                            <div>{formatDateTime(machine.updated_at)}</div>
+                            <div className="text-xs text-muted/70">
+                              Added {formatDateTime(machine.created_at)}
+                            </div>
+                          </>
+                        ) : (
+                          formatDateTime(machine.created_at)
+                        )}
                       </td>
                       <td className="px-5 py-3 align-top text-right">
                         <div className="flex flex-wrap items-start justify-end gap-1">

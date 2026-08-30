@@ -525,6 +525,13 @@ export interface Machine {
   lead_time: string | null;
   is_active: boolean;
   created_at: string;
+  // Bumped on every field update AND on a document re-upload (upsert_machine
+  // runs either way) — the catalog table shows this instead of created_at
+  // when they differ, since "Added" read as stale after a re-upload: the
+  // row's created_at never moves, so a brochure re-uploaded weeks after the
+  // machine was first added looked untouched even though its content (and
+  // this timestamp) had just changed.
+  updated_at: string;
 }
 
 export function getMachines() {
