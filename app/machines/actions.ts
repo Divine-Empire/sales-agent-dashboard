@@ -52,6 +52,13 @@ export async function uploadDocument(
           "Text was extracted but could not be indexed. Try again shortly.",
       };
     }
+    if (result.variants_detected && result.variants_detected > 1) {
+      const names = result.variants?.map((v) => v.name).join(", ") ?? "";
+      return {
+        ok: true,
+        message: `Detected ${result.variants_detected} distinct models in this document — added separately so each keeps its own specs: ${names}.`,
+      };
+    }
     return {
       ok: true,
       message: `${result.name} indexed — ${result.embedded} chunk${

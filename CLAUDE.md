@@ -152,6 +152,19 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   that won't compress under ~4MB, "Paste specifications" is the only
   upload path that works on this plan today.
 
+- Phase 12 (2026-08-30): the backend's `add_machine_from_document` can now
+  detect more than one distinct model in a single uploaded document (a
+  "series" brochure covering e.g. FX-201 and FX-202 with different specs
+  each) and creates one machine per detected variant instead of one generic
+  collapsed profile — see sales-agent's CLAUDE.md, "Verbatim spec
+  preservation + multi-model detection in profile structuring." The upload
+  Server Action (`app/machines/actions.ts`'s `uploadDocument`) surfaces this
+  in its success message when it happens (`variants_detected > 1`), naming
+  each created machine so the uploader isn't confused by seeing several new
+  catalog rows appear from one upload. No dedicated UI beyond that message
+  yet — each created machine shows up as its own ordinary row in the
+  existing catalog table, editable/viewable the same way as any other.
+
 The first Telegram version is intentionally read-only. Do not make its
 disabled composer operational until operator permissions, auditing, and a
 backend send API have been explicitly designed.

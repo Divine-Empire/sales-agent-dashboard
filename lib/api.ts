@@ -598,6 +598,14 @@ export async function uploadMachineDocument(form: FormData) {
     embedded: number;
     codes?: string[];
     error?: string;
+    // A single upload can produce more than one machine when the document
+    // describes several distinct models (a "series" brochure) —
+    // structure_product_profile detects that and add_machine_from_document
+    // creates one machines row per variant. variants_detected is 1 for the
+    // ordinary single-model case; variants lists each created machine's own
+    // id/name/machine_code when there's more than one.
+    variants_detected?: number;
+    variants?: { machine_id: string; name: string; machine_code: string }[];
   }>("/api/machines/upload", { method: "POST", body: form });
 }
 
