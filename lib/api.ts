@@ -628,6 +628,17 @@ export async function uploadMachineDocument(form: FormData) {
     // id/name/machine_code when there's more than one.
     variants_detected?: number;
     variants?: { machine_id: string; name: string; machine_code: string }[];
+    // 0 when structure_product_profile failed entirely (LLM unavailable —
+    // e.g. an OpenAI quota/billing outage — or a malformed response) and
+    // add_machine_from_document fell back to storing the raw extracted
+    // text unchanged. The upload still succeeds (embedded > 0, the agent
+    // can still answer from the raw text), but the content has none of the
+    // rich profile structure (Features/Benefits/Objections/etc.) a
+    // successful structuring call would have produced. Found live: two
+    // real uploads succeeded silently in this state during an OpenAI
+    // credit-exhaustion window, with no signal anywhere that the content
+    // was any different from a normally-structured document.
+    profile_sections_filled?: number;
   }>(
     "/api/machines/upload",
     { method: "POST", body: form },

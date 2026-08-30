@@ -73,6 +73,18 @@ export async function uploadDocument(
         message: `Detected ${result.variants_detected} distinct models in this document — added separately so each keeps its own specs: ${names}.`,
       };
     }
+    // Indexed successfully (embedded > 0, ruled out above) but AI structuring
+    // itself failed and add_machine_from_document fell back to the raw
+    // extracted text — the agent can still answer from it, but the document
+    // has none of the rich profile shape (Features/Benefits/etc.) a normal
+    // upload gets. Surfaced as a success with a caveat, not a failure, since
+    // the upload genuinely did work — just not as richly as usual.
+    if (result.profile_sections_filled === 0) {
+      return {
+        ok: true,
+        message: `${result.name} indexed, but AI structuring didn't complete (the raw extracted text was used instead) — check "View/Edit content" and re-upload later if it looks sparse.`,
+      };
+    }
     return {
       ok: true,
       message: `${result.name} indexed — ${result.embedded} chunk${
