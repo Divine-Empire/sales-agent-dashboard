@@ -51,7 +51,7 @@ auth mechanism.
 | `/conversations/[id]` | §14, §16 | Full transcript, AI summary, per-conversation telemetry |
 | `/handovers` | §12 | Queue with acknowledge/resolve actions |
 | `/customers` | §16 | Everyone who has contacted the agent |
-| `/machines` | §5 | Catalog, plus upload a brochure to index a new machine |
+| `/machines` | §5 | Knowledge base, plus upload a brochure to index a new machine |
 | `/reports` | §15 | Daily / weekly / monthly aggregates |
 | `/logs` | §16 | Per-turn model, tokens, latency, estimated cost |
 | `/opt-outs` | §13 | Opt-out register |

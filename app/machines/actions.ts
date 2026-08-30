@@ -125,7 +125,7 @@ export interface EditState {
   message: string;
 }
 
-/** Edit a catalog entry's own fields (price, description, etc.) without
+/** Edit a knowledge-base machine's own fields (price, description, etc.) without
  * re-uploading its source document — wired to the PATCH /api/machines/{id}
  * route that already existed on the backend but had no dashboard UI. */
 export async function editMachine(

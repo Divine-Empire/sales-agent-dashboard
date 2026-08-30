@@ -27,7 +27,7 @@ export default async function MachinesPage() {
         states={[machinesResult._dataState, documentsResult._dataState]}
       />
       <WorkspaceHeader
-        title="Product catalog"
+        title="Knowledge base"
         description="Upload a brochure and the agent can answer questions about that machine immediately — no developer required."
       />
 
@@ -45,7 +45,7 @@ export default async function MachinesPage() {
         <AddMachineForm />
       </Card>
 
-      <Card title={`${machines.length} in catalog`}>
+      <Card title={`${machines.length} machines`}>
         {machines.length === 0 ? (
           <EmptyState
             title="No machines added through the dashboard yet"

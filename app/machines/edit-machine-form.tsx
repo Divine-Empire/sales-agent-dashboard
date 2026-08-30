@@ -23,7 +23,7 @@ function Result({ state }: { state: EditState | null }) {
   );
 }
 
-/** Inline per-row edit for a catalog entry's own fields. The values shown
+/** Inline per-row edit for a knowledge-base machine's own fields. The values shown
  * (name, category, description, price, lead time, active) are whatever RAG
  * ingestion or a prior edit produced — this form is how a rep corrects them
  * without re-uploading the source document. Toggling "open" swaps the
@@ -112,7 +112,7 @@ export function MachineRowActions({ machine }: { machine: Machine }) {
                 defaultChecked={machine.is_active}
                 className="h-4 w-4 rounded border-border"
               />
-              Active in catalog
+              Active in knowledge base
             </label>
             <div className="flex items-center gap-3">
               <button

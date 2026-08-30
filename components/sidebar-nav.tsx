@@ -33,7 +33,7 @@ const NAV_GROUPS: {
     label: "Records",
     items: [
       { href: "/customers", label: "Customers", icon: "users" },
-      { href: "/machines", label: "Catalog", icon: "box" },
+      { href: "/machines", label: "Knowledge base", icon: "box" },
       { href: "/accessories", label: "Accessories", icon: "box" },
     ],
   },
