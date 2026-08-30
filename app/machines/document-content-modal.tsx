@@ -64,13 +64,13 @@ function FormattedProfile({ content }: { content: string }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 text-left">
       {blocks.map((block, index) => {
         if (block.type === "h2") {
           return (
             <h2
               key={index}
-              className="text-base font-semibold text-foreground"
+              className="text-left text-base font-semibold text-foreground"
             >
               {block.text}
             </h2>
@@ -80,14 +80,14 @@ function FormattedProfile({ content }: { content: string }) {
           return (
             <h3
               key={index}
-              className="pt-2 text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300"
+              className="pt-2 text-left text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300"
             >
               {block.text}
             </h3>
           );
         }
         return (
-          <p key={index} className="text-sm leading-6 text-foreground/85">
+          <p key={index} className="text-left text-sm leading-6 text-foreground/85">
             {block.text}
           </p>
         );
