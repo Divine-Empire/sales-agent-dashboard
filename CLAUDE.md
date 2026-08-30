@@ -97,6 +97,13 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   fetch misses (lead outside the 500-row window, or no `lead_scores` row
   yet), the toggle still renders and says no breakdown is available rather
   than silently showing empty.
+- Phase 9 (2026-08-28): `/leads`' table view now defaults to the Hot filter
+  instead of All — a rep opening the page cold should see who to call
+  first, not a flat unranked list. Distinguishes "no `?category=` param yet"
+  (fresh visit → defaults to `hot`) from "`?category=` explicitly empty"
+  (a rep clicked All → stays All); every filter chip's `href` now always
+  carries an explicit `?category=` (including empty for All) so it can't
+  silently fall back to the Hot default once a rep has moved off it.
 
 The first Telegram version is intentionally read-only. Do not make its
 disabled composer operational until operator permissions, auditing, and a

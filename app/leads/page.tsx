@@ -39,9 +39,14 @@ export default async function LeadsPage({
 }) {
   const { category, view } = await searchParams;
   const activeView = view === "board" ? "board" : "table";
+  // Default the table to Hot, not All — a rep opening this page cold should
+  // see who to call first, not a flat unranked list. "category" is only
+  // undefined when the URL genuinely has no param yet (a fresh visit); once
+  // a rep clicks "All" the param is explicitly "" and stays that way.
+  const effectiveCategory = category === undefined ? "hot" : category;
   const leadsResult = await getLeads({
     limit: activeView === "board" ? 300 : 200,
-    category: activeView === "table" ? category || undefined : undefined,
+    category: activeView === "table" ? effectiveCategory || undefined : undefined,
   });
   const { leads } = leadsResult;
 
@@ -57,10 +62,13 @@ export default async function LeadsPage({
         {activeView === "table" ? (
           <SegmentedControl
             ariaLabel="Filter leads by category"
-            activeValue={category ?? ""}
+            activeValue={effectiveCategory}
             items={FILTERS.map((filter) => ({
               ...filter,
-              href: filter.value ? `/leads?category=${filter.value}` : "/leads",
+              // "All" must round-trip through an explicit ?category= (never
+              // a bare /leads, which would fall back to the Hot default and
+              // make "All" un-selectable once a rep is on the Hot filter).
+              href: `/leads?category=${filter.value}`,
             }))}
           />
         ) : (
@@ -75,7 +83,7 @@ export default async function LeadsPage({
             {
               value: "table",
               label: "Table",
-              href: category ? `/leads?category=${category}` : "/leads",
+              href: `/leads?category=${effectiveCategory}`,
             },
             { value: "board", label: "Board", href: "/leads?view=board" },
           ]}
@@ -90,7 +98,7 @@ export default async function LeadsPage({
           <EmptyState
             title="No leads in this view"
             hint={
-              category
+              effectiveCategory
                 ? "Try another category."
                 : "Leads appear once a customer identifies themselves in chat."
             }
