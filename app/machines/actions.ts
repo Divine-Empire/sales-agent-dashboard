@@ -12,6 +12,15 @@ import {
 } from "@/lib/api";
 import { requireDashboardSession } from "@/lib/auth";
 
+// uploadDocument can run several sequential LLM calls on the backend for one
+// upload (structuring, a missed-variant retry, per-variant enrichment) — a
+// real two-variant document was measured at ~54s end to end, past both the
+// old client-side fetch timeout (lib/api.ts, since raised) AND whatever
+// Vercel's own function execution limit would otherwise cut this off at.
+// Only meaningfully raises the ceiling on plans where the platform allows a
+// longer duration; a no-op on a plan capped lower than this.
+export const maxDuration = 120;
+
 export interface UploadState {
   ok: boolean;
   message: string;

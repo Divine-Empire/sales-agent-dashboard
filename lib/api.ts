@@ -33,7 +33,23 @@ export interface DataState {
 
 export type ApiData<T extends object> = T & { _dataState: DataState };
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// The backend sleeps on Render's free tier; a cold start takes ~30s — 45s
+// covers that for ordinary reads/writes. Document upload is a real
+// exception: structure_product_profile can run several sequential LLM
+// calls for one upload (the structuring call, a missed-variant retry, and
+// one enrichment call per detected variant) — a real two-variant document
+// was measured taking ~54s end to end, past the 45s default, which made
+// the dashboard report "Upload failed" for an upload the backend actually
+// completed successfully a few seconds later. Callers that know their
+// request is upload-shaped pass a longer budget explicitly.
+const DEFAULT_TIMEOUT_MS = 45_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+): Promise<T> {
   if (!API_BASE) {
     throw new ApiError("SALES_AGENT_API_URL is not configured", 500);
   }
@@ -44,8 +60,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...(API_KEY ? { "X-API-Key": API_KEY } : {}),
       ...(init?.headers ?? {}),
     },
-    // The backend sleeps on Render's free tier; a cold start takes ~30s.
-    signal: AbortSignal.timeout(45_000),
+    signal: AbortSignal.timeout(timeoutMs),
     // Lead data changes constantly — a cached dashboard is a misleading one.
     cache: "no-store",
   });
@@ -606,7 +621,11 @@ export async function uploadMachineDocument(form: FormData) {
     // id/name/machine_code when there's more than one.
     variants_detected?: number;
     variants?: { machine_id: string; name: string; machine_code: string }[];
-  }>("/api/machines/upload", { method: "POST", body: form });
+  }>(
+    "/api/machines/upload",
+    { method: "POST", body: form },
+    UPLOAD_TIMEOUT_MS,
+  );
 }
 
 export async function addMachineFromText(form: FormData) {
