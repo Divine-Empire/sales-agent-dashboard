@@ -12,14 +12,19 @@ import {
 } from "@/lib/api";
 import { requireDashboardSession } from "@/lib/auth";
 
-// uploadDocument can run several sequential LLM calls on the backend for one
-// upload (structuring, a missed-variant retry, per-variant enrichment) — a
-// real two-variant document was measured at ~54s end to end, past both the
-// old client-side fetch timeout (lib/api.ts, since raised) AND whatever
-// Vercel's own function execution limit would otherwise cut this off at.
-// Only meaningfully raises the ceiling on plans where the platform allows a
-// longer duration; a no-op on a plan capped lower than this.
-export const maxDuration = 120;
+// NOTE: a `"use server"` file may only export async functions (plus
+// type-only exports, which are stripped at compile time and don't count) —
+// a plain `export const maxDuration = 120` here was tried to raise Vercel's
+// own function execution ceiling for uploadDocument's long-running multi-
+// variant structuring calls, but it broke the Next.js "server actions"
+// convention check and failed the ENTIRE build (a real Turbopack build
+// failure: 12 errors, every named export from this file reported as
+// "doesn't exist"). Route-segment config like maxDuration has to live in a
+// route/page file instead if it's ever needed here — for now this relies
+// solely on lib/api.ts's per-call fetch timeout (UPLOAD_TIMEOUT_MS), which
+// is the fix that actually matters: it's the piece that was causing the
+// dashboard to report "Upload failed" for uploads the backend had already
+// completed.
 
 export interface UploadState {
   ok: boolean;
