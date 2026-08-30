@@ -4,7 +4,7 @@ import { Card, EmptyState, Stat } from "@/components/ui";
 import { removeMachine } from "./actions";
 import { AddMachineForm } from "./upload-form";
 import { MachineRowActions } from "./edit-machine-form";
-import { DocumentContentToggle } from "./document-content";
+import { DocumentContentModal } from "./document-content-modal";
 import { DataStateNotice } from "@/components/data-state-notice";
 import { WorkspaceHeader } from "@/components/workspace";
 
@@ -65,42 +65,61 @@ export default async function MachinesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/70">
-                {machines.map((machine) => (
-                  <tr
-                    key={machine.id}
-                    className="transition-colors hover:bg-surface"
-                  >
-                    <td className="px-5 py-3 align-top text-foreground">{machine.name}</td>
-                    <td className="px-5 py-3 align-top">
-                      <code className="rounded bg-border px-1.5 py-0.5 text-xs text-foreground/80">
-                        {machine.machine_code}
-                      </code>
-                    </td>
-                    <td className="px-5 py-3 align-top text-muted">
-                      {machine.category}
-                    </td>
-                    <td className="px-5 py-3 align-top text-muted">
-                      {machine.price_range ?? "—"}
-                    </td>
-                    <td className="px-5 py-3 align-top text-muted">
-                      {formatDateTime(machine.created_at)}
-                    </td>
-                    <td className="px-5 py-3 align-top text-right">
-                      <div className="flex flex-wrap items-start justify-end gap-1">
-                        <MachineRowActions machine={machine} />
-                        <form action={removeMachine}>
-                          <input type="hidden" name="id" value={machine.id} />
-                          <button
-                            type="submit"
-                            className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
-                          >
-                            Remove
-                          </button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {machines.map((machine) => {
+                  // A machine can in principle have more than one uploaded
+                  // document; the most recently indexed one is what
+                  // ingest_document last wrote to Qdrant, so it's the one
+                  // worth surfacing here.
+                  const machineDoc = documents
+                    .filter((doc) => doc.machine_id === machine.id)
+                    .sort(
+                      (a, b) =>
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime(),
+                    )[0];
+                  return (
+                    <tr
+                      key={machine.id}
+                      className="transition-colors hover:bg-surface"
+                    >
+                      <td className="px-5 py-3 align-top text-foreground">{machine.name}</td>
+                      <td className="px-5 py-3 align-top">
+                        <code className="rounded bg-border px-1.5 py-0.5 text-xs text-foreground/80">
+                          {machine.machine_code}
+                        </code>
+                      </td>
+                      <td className="px-5 py-3 align-top text-muted">
+                        {machine.category}
+                      </td>
+                      <td className="px-5 py-3 align-top text-muted">
+                        {machine.price_range ?? "—"}
+                      </td>
+                      <td className="px-5 py-3 align-top text-muted">
+                        {formatDateTime(machine.created_at)}
+                      </td>
+                      <td className="px-5 py-3 align-top text-right">
+                        <div className="flex flex-wrap items-start justify-end gap-1">
+                          {machineDoc && (
+                            <DocumentContentModal
+                              documentId={machineDoc.id}
+                              machineName={machine.name}
+                            />
+                          )}
+                          <MachineRowActions machine={machine} />
+                          <form action={removeMachine}>
+                            <input type="hidden" name="id" value={machine.id} />
+                            <button
+                              type="submit"
+                              className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
+                            >
+                              Remove
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -111,25 +130,20 @@ export default async function MachinesPage() {
         <Card title="Uploaded documents">
           <ul className="divide-y divide-border/70">
             {documents.slice(0, 20).map((doc) => (
-              <li key={doc.id} className="px-5 py-2.5 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="min-w-0 truncate text-foreground/80">
-                    {doc.title ?? "Untitled"}
-                    <span className="ml-2 text-xs text-muted/70">
-                      {titleCase(doc.doc_type)}
-                    </span>
+              <li
+                key={doc.id}
+                className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm"
+              >
+                <span className="min-w-0 truncate text-foreground/80">
+                  {doc.title ?? "Untitled"}
+                  <span className="ml-2 text-xs text-muted/70">
+                    {titleCase(doc.doc_type)}
                   </span>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="text-xs text-muted">
-                      {doc.indexed_at ? "Indexed" : "Pending"} ·{" "}
-                      {formatDateTime(doc.created_at)}
-                    </span>
-                    <DocumentContentToggle
-                      documentId={doc.id}
-                      title={doc.title ?? "Untitled"}
-                    />
-                  </div>
-                </div>
+                </span>
+                <span className="shrink-0 text-xs text-muted">
+                  {doc.indexed_at ? "Indexed" : "Pending"} ·{" "}
+                  {formatDateTime(doc.created_at)}
+                </span>
               </li>
             ))}
           </ul>

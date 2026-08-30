@@ -116,20 +116,29 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   list. `AddAccessoryForm` takes `machineId` as a prop (not typed in) and
   submits it as a hidden field. `getAccessories`/`createAccessory`
   (`lib/api.ts`) both gained `machine_id`.
-- Phase 11 (2026-08-28): `/machines`' "Uploaded documents" list is now
-  interactive — each row has a "View/Edit content" toggle
-  (`document-content.tsx`) that loads and edits the document's full
-  AI-structured product profile (sales-agent's `structure_product_profile`,
-  `data/product_profile_template.md`'s shape). Found missing when a real
-  upload's structured content had nowhere in the dashboard to be reviewed
-  or corrected — the backend's `PATCH /api/machines/documents/{id}` route
-  existed with no UI calling it, same gap `/machines`' own field-edit form
-  closed for `machines` itself. Content is fetched lazily (only when a row
-  is expanded) via a new Server Action (`fetchMachineDocumentContent` in
-  `actions.ts`) that bridges to `lib/api.ts`'s `getMachineDocument` — that
-  function is `server-only` and can't be called directly from
-  `document-content.tsx`'s client component. Saving re-ingests into Qdrant
-  on the backend immediately, so a correction takes effect right away.
+- Phase 11 (2026-08-28): each machine row in `/machines`' catalog table now
+  has a "View/Edit content" button (`document-content-modal.tsx`) that
+  opens its most-recently-uploaded document's full AI-structured product
+  profile (sales-agent's `structure_product_profile`,
+  `data/product_profile_template.md`'s shape) in a modal — not an inline
+  expand, and not buried in the separate "Uploaded documents" list (which
+  stays as a plain status/timestamp list; a first version put the toggle
+  there, per-document, before the client asked for it on the catalog row
+  itself instead). View mode renders the `##`/`###` markdown as actual
+  headings and paragraphs via a small hand-rolled parser
+  (`FormattedProfile`) — deliberately not a markdown library, since the
+  shape is fixed and narrow, not general-purpose markdown; edit mode is a
+  plain textarea over the same raw text. Found missing when a real upload's
+  structured content had nowhere in the dashboard to be reviewed or
+  corrected — the backend's `PATCH /api/machines/documents/{id}` route
+  existed with no UI calling it. Content is fetched lazily (only when the
+  modal opens) via a Server Action bridge (`fetchMachineDocumentContent` in
+  `actions.ts`, since `lib/api.ts`'s `getMachineDocument` is `server-only`
+  and can't be called from a client component directly). Saving re-ingests
+  into Qdrant on the backend immediately and echoes the saved text back in
+  the action's result (`DocumentEditState.content`) so the modal can show
+  it in view mode without a second fetch or reading its own form's DOM
+  state.
 - Also fixed the same day: Vercel's Server Actions default to a 1MB request
   body limit, which silently 413'd any Catalog document upload before it
   reached the backend's own 10MB limit — `next.config.ts`'s

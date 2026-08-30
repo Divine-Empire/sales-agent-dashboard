@@ -171,6 +171,9 @@ export async function fetchMachineDocumentContent(documentId: string) {
 export interface DocumentEditState {
   ok: boolean;
   message: string;
+  // Echoed back on success so the caller can show the saved text in a view
+  // mode without re-fetching or reading its own form's DOM state.
+  content?: string;
 }
 
 /** Correct an ingested document's content — most often the AI-structured
@@ -197,6 +200,7 @@ export async function editMachineDocument(
       message: result.reingested
         ? "Saved — the agent will use the updated content right away."
         : "Saved, but re-indexing did not complete — the agent may still answer from the old content for a moment.",
+      content,
     };
   } catch (error) {
     console.error("[machines] document edit failed", error);
