@@ -22,14 +22,17 @@ function Result({ state }: { state: AccessoryFormState | null }) {
   );
 }
 
-/** Type in an accessory/part directly — no Sheet sync, no file upload. The
- * paste-in workflow the client actually uses today, kept as simple as
- * "Paste specifications" is for machines (upload-form.tsx). */
-export function AddAccessoryForm() {
+/** Type in an accessory/part directly for one already-chosen machine — no
+ * Sheet sync, no file upload. The paste-in workflow the client actually
+ * uses today, kept as simple as "Paste specifications" is for machines
+ * (upload-form.tsx). machineId comes from the page's machine selector, not
+ * typed here — every accessory belongs to exactly one machine. */
+export function AddAccessoryForm({ machineId }: { machineId: string }) {
   const [state, action, pending] = useActionState(addAccessory, null);
 
   return (
     <form action={action} className="space-y-3 px-5 py-4">
+      <input type="hidden" name="machine_id" value={machineId} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={label} htmlFor="name">

@@ -521,6 +521,7 @@ export function getMachines() {
 
 export interface Accessory {
   id: string;
+  machine_id: string;
   name: string;
   category: string | null;
   description: string | null;
@@ -528,9 +529,12 @@ export interface Accessory {
   created_at: string;
 }
 
-export function getAccessories() {
+export function getAccessories(params?: { machineId?: string }) {
+  const query = params?.machineId
+    ? `?machine_id=${encodeURIComponent(params.machineId)}`
+    : "";
   return safe<{ count: number; accessories: Accessory[] }>(
-    "/api/accessories",
+    `/api/accessories${query}`,
     { count: 0, accessories: [] },
   );
 }
@@ -611,6 +615,7 @@ export async function updateMachine(
 }
 
 export async function createAccessory(fields: {
+  machine_id: string;
   name: string;
   category?: string;
   description?: string;

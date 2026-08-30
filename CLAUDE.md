@@ -104,6 +104,18 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   (a rep clicked All → stays All); every filter chip's `href` now always
   carries an explicit `?category=` (including empty for All) so it can't
   silently fall back to the Hot default once a rep has moved off it.
+- Phase 10 (2026-08-28): `/accessories` reworked around the backend's new
+  per-machine linkage (`accessories.machine_id`, sales-agent's
+  `migrations/005_accessories_machine_link.sql`) — accessories are no
+  longer a flat, machine-agnostic list. The page now picks a machine first
+  (`machine-select.tsx`, a plain GET-navigating `<select>` that submits to
+  `?machine_id=...` — the only reason this one small piece needs
+  `"use client"`, so it's split out rather than making the whole page
+  client-side) and only then shows/lets you add that machine's accessories;
+  no machine chosen renders an explicit empty state rather than a flat
+  list. `AddAccessoryForm` takes `machineId` as a prop (not typed in) and
+  submits it as a hidden field. `getAccessories`/`createAccessory`
+  (`lib/api.ts`) both gained `machine_id`.
 
 The first Telegram version is intentionally read-only. Do not make its
 disabled composer operational until operator permissions, auditing, and a

@@ -14,24 +14,31 @@ export interface AccessoryFormState {
   message: string;
 }
 
-/** Add an accessory/part by typing it in — no Google Sheet integration and no
- * document upload at this stage; these are entered manually and re-indexed
- * for RAG immediately so the agent can recommend them right away. */
+/** Add an accessory/part under a specific machine by typing it in — no
+ * Google Sheet integration and no document upload at this stage; these are
+ * entered manually and re-indexed for RAG immediately so the agent can
+ * recommend them right away. Each accessory belongs to exactly one machine
+ * (the client's own workflow: pick a machine, then add its accessories). */
 export async function addAccessory(
   _prev: AccessoryFormState | null,
   formData: FormData,
 ): Promise<AccessoryFormState> {
   await requireDashboardSession();
+  const machineId = String(formData.get("machine_id") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 
+  if (!machineId) {
+    return { ok: false, message: "Choose a machine first." };
+  }
   if (!name) {
     return { ok: false, message: "Name is required." };
   }
 
   try {
     await createAccessory({
+      machine_id: machineId,
       name,
       category: category || undefined,
       description: description || undefined,
