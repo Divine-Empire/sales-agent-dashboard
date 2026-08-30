@@ -116,6 +116,32 @@ The improvement plan in `.agents/improvement.md` is authoritative. As of
   list. `AddAccessoryForm` takes `machineId` as a prop (not typed in) and
   submits it as a hidden field. `getAccessories`/`createAccessory`
   (`lib/api.ts`) both gained `machine_id`.
+- Phase 11 (2026-08-28): `/machines`' "Uploaded documents" list is now
+  interactive — each row has a "View/Edit content" toggle
+  (`document-content.tsx`) that loads and edits the document's full
+  AI-structured product profile (sales-agent's `structure_product_profile`,
+  `data/product_profile_template.md`'s shape). Found missing when a real
+  upload's structured content had nowhere in the dashboard to be reviewed
+  or corrected — the backend's `PATCH /api/machines/documents/{id}` route
+  existed with no UI calling it, same gap `/machines`' own field-edit form
+  closed for `machines` itself. Content is fetched lazily (only when a row
+  is expanded) via a new Server Action (`fetchMachineDocumentContent` in
+  `actions.ts`) that bridges to `lib/api.ts`'s `getMachineDocument` — that
+  function is `server-only` and can't be called directly from
+  `document-content.tsx`'s client component. Saving re-ingests into Qdrant
+  on the backend immediately, so a correction takes effect right away.
+- Also fixed the same day: Vercel's Server Actions default to a 1MB request
+  body limit, which silently 413'd any Catalog document upload before it
+  reached the backend's own 10MB limit — `next.config.ts`'s
+  `experimental.serverActions.bodySizeLimit` raised to `10mb` to match.
+  Note this does NOT fully solve large uploads on Vercel's Hobby plan: the
+  platform's own serverless function payload limit (~4.5MB, verified live)
+  sits underneath Next.js's own limit and is not configurable — a file
+  under 10MB but over ~4.5MB still fails with `FUNCTION_PAYLOAD_TOO_LARGE`,
+  a different error than the 1MB one this fix addresses. Confirmed via a
+  real 6.75MB PDF (413) that passed once compressed to ~1MB. For anything
+  that won't compress under ~4MB, "Paste specifications" is the only
+  upload path that works on this plan today.
 
 The first Telegram version is intentionally read-only. Do not make its
 disabled composer operational until operator permissions, auditing, and a

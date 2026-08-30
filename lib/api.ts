@@ -555,6 +555,27 @@ export function getMachineDocuments() {
   );
 }
 
+export interface MachineDocumentDetail extends MachineDocument {
+  content: string;
+}
+
+export function getMachineDocument(documentId: string) {
+  // Full content — list_machine_documents deliberately omits it, since the
+  // list view never needed it; the edit view does.
+  return safe<MachineDocumentDetail>(
+    `/api/machines/documents/${encodeURIComponent(documentId)}`,
+    {
+      id: documentId,
+      machine_id: null,
+      doc_type: "",
+      title: null,
+      indexed_at: null,
+      created_at: "",
+      content: "",
+    },
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Mutations — called from Server Actions, never the browser
 // ---------------------------------------------------------------------------
@@ -612,6 +633,20 @@ export async function updateMachine(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(fields),
   });
+}
+
+export async function updateMachineDocumentContent(documentId: string, content: string) {
+  // Re-ingests into Qdrant on the backend immediately — a correction to an
+  // AI-structured product profile (or any document content) takes effect
+  // right away, not just on the next re-upload.
+  return request<{ id: string; reingested: boolean }>(
+    `/api/machines/documents/${encodeURIComponent(documentId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    },
+  );
 }
 
 export async function createAccessory(fields: {

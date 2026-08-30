@@ -5,7 +5,9 @@ import {
   addMachineFromText,
   ApiError,
   deleteMachine,
+  getMachineDocument,
   updateMachine,
+  updateMachineDocumentContent,
   uploadMachineDocument,
 } from "@/lib/api";
 import { requireDashboardSession } from "@/lib/auth";
@@ -151,6 +153,53 @@ export async function editMachine(
     return { ok: true, message: "Saved." };
   } catch (error) {
     console.error("[machines] edit failed", error);
+    const message =
+      error instanceof ApiError ? error.message : "Could not save changes.";
+    return { ok: false, message };
+  }
+}
+
+/** Fetch one document's full content for the edit form — lib/api.ts is
+ * server-only, so a client component can't call getMachineDocument
+ * directly; this thin Server Action is the bridge. */
+export async function fetchMachineDocumentContent(documentId: string) {
+  await requireDashboardSession();
+  const doc = await getMachineDocument(documentId);
+  return { content: doc.content, ok: doc._dataState.status === "ready" };
+}
+
+export interface DocumentEditState {
+  ok: boolean;
+  message: string;
+}
+
+/** Correct an ingested document's content — most often the AI-structured
+ * product profile (What it does / Objections / FAQs / etc.,
+ * data/product_profile_template.md's shape) that structure_product_profile
+ * generated from an upload. Re-ingests into Qdrant on the backend
+ * immediately, so a fix takes effect right away rather than waiting for a
+ * re-upload. */
+export async function editMachineDocument(
+  _prev: DocumentEditState | null,
+  formData: FormData,
+): Promise<DocumentEditState> {
+  await requireDashboardSession();
+  const documentId = String(formData.get("document_id") ?? "");
+  const content = String(formData.get("content") ?? "");
+  if (!documentId) return { ok: false, message: "Missing document id." };
+  if (!content.trim()) return { ok: false, message: "Content cannot be empty." };
+
+  try {
+    const result = await updateMachineDocumentContent(documentId, content);
+    revalidatePath("/machines");
+    return {
+      ok: true,
+      message: result.reingested
+        ? "Saved — the agent will use the updated content right away."
+        : "Saved, but re-indexing did not complete — the agent may still answer from the old content for a moment.",
+    };
+  } catch (error) {
+    console.error("[machines] document edit failed", error);
     const message =
       error instanceof ApiError ? error.message : "Could not save changes.";
     return { ok: false, message };

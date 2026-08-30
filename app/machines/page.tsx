@@ -4,6 +4,7 @@ import { Card, EmptyState, Stat } from "@/components/ui";
 import { removeMachine } from "./actions";
 import { AddMachineForm } from "./upload-form";
 import { MachineRowActions } from "./edit-machine-form";
+import { DocumentContentToggle } from "./document-content";
 import { DataStateNotice } from "@/components/data-state-notice";
 import { WorkspaceHeader } from "@/components/workspace";
 
@@ -110,20 +111,25 @@ export default async function MachinesPage() {
         <Card title="Uploaded documents">
           <ul className="divide-y divide-border/70">
             {documents.slice(0, 20).map((doc) => (
-              <li
-                key={doc.id}
-                className="flex items-center justify-between px-5 py-2.5 text-sm"
-              >
-                <span className="min-w-0 truncate text-foreground/80">
-                  {doc.title ?? "Untitled"}
-                  <span className="ml-2 text-xs text-muted/70">
-                    {titleCase(doc.doc_type)}
+              <li key={doc.id} className="px-5 py-2.5 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 truncate text-foreground/80">
+                    {doc.title ?? "Untitled"}
+                    <span className="ml-2 text-xs text-muted/70">
+                      {titleCase(doc.doc_type)}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-xs text-muted">
-                  {doc.indexed_at ? "Indexed" : "Pending"} ·{" "}
-                  {formatDateTime(doc.created_at)}
-                </span>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="text-xs text-muted">
+                      {doc.indexed_at ? "Indexed" : "Pending"} ·{" "}
+                      {formatDateTime(doc.created_at)}
+                    </span>
+                    <DocumentContentToggle
+                      documentId={doc.id}
+                      title={doc.title ?? "Untitled"}
+                    />
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
