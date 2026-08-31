@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { DeleteConversationButton } from "./delete-conversation-button";
 
 type ChannelTone = "telegram" | "whatsapp";
 
@@ -166,6 +167,7 @@ export function ConversationListRow({
   preview,
   previewPrefix,
   badges,
+  conversationId,
 }: {
   channel: ChannelTone;
   href: string;
@@ -175,10 +177,13 @@ export function ConversationListRow({
   preview: string;
   previewPrefix?: ReactNode;
   badges?: ReactNode;
+  /** When given, renders a delete button on the row — omitted callers keep
+   * the old behavior (no delete affordance). */
+  conversationId?: string;
 }) {
   const tone = TONES[channel];
   return (
-    <li>
+    <li className="group relative">
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
@@ -193,7 +198,7 @@ export function ConversationListRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-sm font-medium">{name}</span>
+            <span className="truncate text-sm font-medium pr-5">{name}</span>
             <span className="shrink-0 text-[11px] text-muted">{timestamp}</span>
           </span>
           <span className="mt-0.5 block truncate text-xs text-muted">
@@ -203,6 +208,15 @@ export function ConversationListRow({
           {badges && <span className="mt-2 flex items-center gap-1.5">{badges}</span>}
         </span>
       </Link>
+      {conversationId && (
+        <span className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          <DeleteConversationButton
+            conversationId={conversationId}
+            channel={channel}
+            customerName={name}
+          />
+        </span>
+      )}
     </li>
   );
 }

@@ -22,6 +22,7 @@ export function TelegramConversationList({ conversations, activeId, query }: {
         <ConversationListRow
           key={conversation.id} channel="telegram"
           href={`/conversations/telegram/${encodeURIComponent(conversation.id)}`}
+          conversationId={conversation.id}
           active={conversation.id === activeId} name={conversation.contact.name}
           timestamp={timeAgo(conversation.lastActivityAt)} preview={conversation.lastMessage}
           previewPrefix={conversation.lastMessageRole === "assistant" ? <span className="text-sky-600 dark:text-sky-400">You: </span> : undefined}

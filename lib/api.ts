@@ -228,6 +228,16 @@ export function getConversations(params?: {
   );
 }
 
+/** Permanently deletes a conversation (messages, summary, lead-score
+ * history) — for clearing test/demo conversations out of the inbox, not a
+ * customer-facing action. Irreversible; the caller must confirm first. */
+export async function deleteConversation(conversationId: string) {
+  return request<{ conversation_id: string; deleted: boolean }>(
+    `/api/conversations/${encodeURIComponent(conversationId)}`,
+    { method: "DELETE" },
+  );
+}
+
 // ---------------------------------------------------------------------------
 // WhatsApp — real conversations, proxied by the sales-agent backend from the
 // whatsapp-portal. This project never reads the portal's database or holds its
