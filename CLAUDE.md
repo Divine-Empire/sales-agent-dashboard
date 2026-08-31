@@ -13,7 +13,22 @@ never reach the browser (`lib/api.ts` imports `server-only` specifically so
 an accidental client import is a build error, not a silent leak).
 
 Vercel project: `sales-agent-dashboard` (team `mis-thedivineemps-projects`).
-Repo: `Divine-Empire/sales-agent-dashboard`.
+
+Repo: **two remotes, push to both** (added 2026-08-31, mirroring the
+`sales-agent` repo's long-standing convention):
+`divine` → `Divine-Empire/sales-agent-dashboard` (the original) and
+`origin` → `teamai-botivate/sales-agent-dashboard` (private, local `main`
+tracks it). The sibling `sales-agent` repo drifted 31 commits between its
+two remotes before this was written down, so pushing only one is a real
+failure mode.
+
+**Neither remote deploys anything.** Verified 2026-08-31: the Vercel
+project has no git integration — `vercel inspect` on the live production
+deployment reports no commit/branch/repo metadata, and the project's `link`
+is unset. Deploys are CLI-driven (`vercel deploy --prod` / the
+`vercel:deploy` skill), so a `git push` to either remote does **not** ship
+anything, and the running site can silently sit behind `main`. Pushing is
+version control only; deploying is a separate, explicit step.
 
 ## Current CRM implementation
 
